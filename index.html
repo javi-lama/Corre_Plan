@@ -158,117 +158,125 @@
   </div>
 
   <nav class="nav-tabs">
-    <div class="nav-tab active">ACUMULADO</div>
-    <div class="nav-tab">CAMA 1</div>
-    <div class="nav-tab">CAMA 2</div>
-    <div class="nav-tab">CAMA 3</div>
-    <div class="nav-tab">CAMA 4</div>
-    <div class="nav-tab">CAMA 5</div>
-    <div class="nav-tab">CAMA 6</div>
-    <div class="nav-tab">CAMA 7</div>
-    <div class="nav-tab">CAMA 8</div>
-    <div class="nav-tab">CAMA 9</div>
-    <div class="nav-tab">CAMA 10</div>
-    <div class="nav-tab">CAMA 11</div>
-    <div class="nav-tab">CAMA 12</div>
-    <div class="nav-tab">CAMA 13</div>
-    <div class="nav-tab">CAMA 14</div>
-    <div class="nav-tab">CAMA 15</div>
-    <div class="nav-tab">CAMA 16</div>
-    <div class="nav-tab">CAMA 17</div>
-    <div class="nav-tab">CAMA 18</div>
-    <div class="nav-tab">CAMA 19</div>
-    <div class="nav-tab">CAMA 20</div>
+    <button class="nav-tab tab-button active bed-button" data-bed="Acumulado" id="acumulado-button" data-cama-id="acumulado">Acumulado</button>
+    <button class="nav-tab tab-button" data-cama-id="1">CAMA 1</button>
+    <button class="nav-tab tab-button" data-cama-id="2">CAMA 2</button>
+    <button class="nav-tab tab-button" data-cama-id="3">CAMA 3</button>
+    <button class="nav-tab tab-button" data-cama-id="4">CAMA 4</button>
+    <button class="nav-tab tab-button" data-cama-id="5">CAMA 5</button>
+    <button class="nav-tab tab-button" data-cama-id="6">CAMA 6</button>
+    <button class="nav-tab tab-button" data-cama-id="7">CAMA 7</button>
+    <button class="nav-tab tab-button" data-cama-id="8">CAMA 8</button>
+    <button class="nav-tab tab-button" data-cama-id="9">CAMA 9</button>
+    <button class="nav-tab tab-button" data-cama-id="10">CAMA 10</button>
+    <button class="nav-tab tab-button" data-cama-id="11">CAMA 11</button>
+    <button class="nav-tab tab-button" data-cama-id="12">CAMA 12</button>
+    <button class="nav-tab tab-button" data-cama-id="13">CAMA 13</button>
+    <button class="nav-tab tab-button" data-cama-id="14">CAMA 14</button>
+    <button class="nav-tab tab-button" data-cama-id="15">CAMA 15</button>
+    <button class="nav-tab tab-button" data-cama-id="16">CAMA 16</button>
+    <button class="nav-tab tab-button" data-cama-id="17">CAMA 17</button>
+    <button class="nav-tab tab-button" data-cama-id="18">CAMA 18</button>
+    <button class="nav-tab tab-button" data-cama-id="19">CAMA 19</button>
+    <button class="nav-tab tab-button" data-cama-id="20">CAMA 20</button>
   </nav>
 
   <main style="display: flex; padding: 20px; gap: 20px;">
-    <!-- Panel de tareas acumuladas -->
-    <section style="flex: 2.33; background: #f0f4ff; padding: 20px; border-radius: 10px; display: flex; flex-direction: column; align-items: center;">
-      <h2 class="plan-title"></h2>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
-        <div>
-          <h3>CAMA 1</h3>
-          <ul></ul>
+    <!-- Panel de tareas acumuladas envuelto en #acumulado-view -->
+    <div id="acumulado-view" style="flex: 2.33;">
+      <section style="background: #f0f4ff; padding: 20px; border-radius: 10px; display: flex; flex-direction: column; align-items: center;">
+        <h2 class="plan-title"></h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+          <div>
+            <h3><span data-cama-id="1">CAMA 1</span></h3>
+            <ul></ul>
+          </div>
+          <div>
+            <h3><span data-cama-id="2">CAMA 2</span></h3>
+            <ul></ul>
+          </div>
+          <div>
+            <h3><span data-cama-id="3">CAMA 3</span></h3>
+            <ul></ul>
+          </div>
+          <div>
+            <h3><span data-cama-id="4">CAMA 4</span></h3>
+            <ul></ul>
+          </div>
+          <div>
+            <h3><span data-cama-id="5">CAMA 5</span></h3>
+            <ul></ul>
+          </div>
+          <div>
+            <h3><span data-cama-id="6">CAMA 6</span></h3>
+            <ul></ul>
+          </div>
+          <div>
+            <h3><span data-cama-id="7">CAMA 7</span></h3>
+            <ul></ul>
+          </div>
+          <div>
+            <h3><span data-cama-id="8">CAMA 8</span></h3>
+            <ul></ul>
+          </div>
+          <div>
+            <h3><span data-cama-id="9">CAMA 9</span></h3>
+            <ul></ul>
+          </div>
+          <div>
+            <h3><span data-cama-id="10">CAMA 10</span></h3>
+            <ul></ul>
+          </div>
+          <div>
+            <h3><span data-cama-id="11">CAMA 11</span></h3>
+            <ul></ul>
+          </div>
+          <div>
+            <h3><span data-cama-id="12">CAMA 12</span></h3>
+            <ul></ul>
+          </div>
+          <div>
+            <h3><span data-cama-id="13">CAMA 13</span></h3>
+            <ul></ul>
+          </div>
+          <div>
+            <h3><span data-cama-id="14">CAMA 14</span></h3>
+            <ul></ul>
+          </div>
+          <div>
+            <h3><span data-cama-id="15">CAMA 15</span></h3>
+            <ul></ul>
+          </div>
+          <div>
+            <h3><span data-cama-id="16">CAMA 16</span></h3>
+            <ul></ul>
+          </div>
+          <div>
+            <h3><span data-cama-id="17">CAMA 17</span></h3>
+            <ul></ul>
+          </div>
+          <div>
+            <h3><span data-cama-id="18">CAMA 18</span></h3>
+            <ul></ul>
+          </div>
+          <div>
+            <h3><span data-cama-id="19">CAMA 19</span></h3>
+            <ul></ul>
+          </div>
+          <div>
+            <h3><span data-cama-id="20">CAMA 20</span></h3>
+            <ul></ul>
+          </div>
         </div>
-        <div>
-          <h3>CAMA 2</h3>
-          <ul></ul>
-        </div>
-        <div>
-          <h3>CAMA 3</h3>
-          <ul></ul>
-        </div>
-        <div>
-          <h3>CAMA 4</h3>
-          <ul></ul>
-        </div>
-        <div>
-          <h3>CAMA 5</h3>
-          <ul></ul>
-        </div>
-        <div>
-          <h3>CAMA 6</h3>
-          <ul></ul>
-        </div>
-        <div>
-          <h3>CAMA 7</h3>
-          <ul></ul>
-        </div>
-        <div>
-          <h3>CAMA 8</h3>
-          <ul></ul>
-        </div>
-        <div>
-          <h3>CAMA 9</h3>
-          <ul></ul>
-        </div>
-        <div>
-          <h3>CAMA 10</h3>
-          <ul></ul>
-        </div>
-        <div>
-          <h3>CAMA 11</h3>
-          <ul></ul>
-        </div>
-        <div>
-          <h3>CAMA 12</h3>
-          <ul></ul>
-        </div>
-        <div>
-          <h3>CAMA 13</h3>
-          <ul></ul>
-        </div>
-        <div>
-          <h3>CAMA 14</h3>
-          <ul></ul>
-        </div>
-        <div>
-          <h3>CAMA 15</h3>
-          <ul></ul>
-        </div>
-        <div>
-          <h3>CAMA 16</h3>
-          <ul></ul>
-        </div>
-        <div>
-          <h3>CAMA 17</h3>
-          <ul></ul>
-        </div>
-        <div>
-          <h3>CAMA 18</h3>
-          <ul></ul>
-        </div>
-        <div>
-          <h3>CAMA 19</h3>
-          <ul></ul>
-        </div>
-        <div>
-          <h3>CAMA 20</h3>
-          <ul></ul>
-        </div>
+      </section>
+    </div>
+    <!-- Nueva vista individual de cama -->
+    <div id="cama-view" style="display: none; flex: 2.33;">
+      <div class="bed-panel cama-panel" style="background: #f0f4ff; padding: 20px; border-radius: 10px;" data-bed="">
+        <h2 class="bed-panel-title" id="cama-view-title"></h2>
+        <!-- futura información detallada de la cama -->
       </div>
-    </section>
-
+    </div>
     <!-- Formulario de añadir tarea -->
     <aside style="flex: 0.67; background: linear-gradient(to bottom, #c6ffe2, #c6e9ff); padding: 20px; border-radius: 10px; display: flex; flex-direction: column; align-items: center;">
       <h2>Añadir tarea</h2>
@@ -338,6 +346,8 @@
     2. Marca los checks cuando estén completados.<br>
     3. Usa los íconos ✏️ y 🗑️ para editar o borrar.<br>
     4. Las tareas se guardan automáticamente. ✅
+    <br><br>
+    🛏️ Puedes editar el número de cualquier cama haciendo doble clic sobre su nombre, ya sea en el menú superior o en el encabezado del plan acumulado. Esto actualizará automáticamente todas las referencias a esa cama, incluyendo el menú desplegable de tareas.
   </section>
 
   <script>
@@ -412,28 +422,36 @@
     form.addEventListener('submit', function (e) {
       e.preventDefault();
 
-      const cama = camaSelect.value;
-      if (!cama) return alert("Seleccione una cama para añadir tarea.");
+      const camaId = camaSelect.value;
+      if (!camaId) return alert("Seleccione una cama para añadir tarea.");
+
+      // Leer nombres de cama personalizados desde localStorage
+      let tareasData = JSON.parse(localStorage.getItem('tareas') || '{}');
+      const nombresCamas = tareasData['_nombresCamas'] || {};
+      // Nombre mostrado para esta camaId
+      let nombreCama = nombresCamas[camaId] || `CAMA ${camaId}`;
+      // Normalizar para comparación
+      const normalize = str => (str || '').trim().toUpperCase();
 
       let nuevaTarea = '';
-
       if (accionSelect.value) {
         if (accionSelect.value === 'alta') nuevaTarea = 'Alta médica';
         else if (accionSelect.value === 'hc') nuevaTarea = 'Realizar Historia Clínica';
         else if (accionSelect.value === 'evolucionar') nuevaTarea = 'Evolucionar paciente';
       }
-
       if (imagenInput.value.trim()) nuevaTarea += (nuevaTarea ? ' + ' : '') + `Imagen: ${imagenInput.value.trim()}`;
       if (labInput.value.trim()) nuevaTarea += (nuevaTarea ? ' + ' : '') + `Lab: ${labInput.value.trim()}`;
       if (interconsultaInput.value.trim()) nuevaTarea += (nuevaTarea ? ' + ' : '') + `IC: ${interconsultaInput.value.trim()}`;
       if (otroTextarea.value.trim()) nuevaTarea += (nuevaTarea ? ' + ' : '') + otroTextarea.value.trim();
-
       if (!nuevaTarea) return alert("Debe ingresar al menos un tipo de tarea.");
 
-      // Buscar el <h3> correspondiente y su siguiente <ul>
+      // Buscar el <h3> correspondiente y su siguiente <ul> usando nombre actualizado
       let ul = null;
       document.querySelectorAll('h3').forEach(h3 => {
-        if (h3.textContent.trim() === `CAMA ${cama}`) {
+        // Usar el span con data-cama-id si existe
+        const span = h3.querySelector('[data-cama-id]');
+        let h3Nombre = span ? span.textContent : h3.textContent;
+        if (normalize(h3Nombre) === normalize(nombreCama)) {
           ul = h3.nextElementSibling;
         }
       });
@@ -514,30 +532,45 @@
 
     function guardarTareas() {
       const datos = {};
+      // Map camaId -> nombre actualizado
+      const nombresCamas = {};
+      document.querySelectorAll('[data-cama-id]').forEach(el => {
+        const id = el.dataset.camaId;
+        if (id) nombresCamas[id] = el.textContent.trim();
+      });
       document.querySelectorAll('h3').forEach(h3 => {
-        const cama = h3.textContent.trim();
+        // Usar el span con data-cama-id para obtener el nombre de la cama
+        const span = h3.querySelector('[data-cama-id]');
+        let camaId = span ? span.dataset.camaId : null;
+        let camaNombre = span ? span.textContent.trim() : h3.textContent.trim();
+        // Si tiene camaId, usar el nombre actualizado de nombresCamas
+        if (camaId && nombresCamas[camaId]) {
+          camaNombre = nombresCamas[camaId];
+        }
         const ul = h3.nextElementSibling;
         if (ul) {
-          datos[cama] = [];
+          datos[camaNombre] = [];
           ul.querySelectorAll('li').forEach(li => {
-            const span = li.querySelector('span');
+            const tareaSpan = li.querySelector('span');
             const checks = [...li.querySelectorAll('input[type="checkbox"]')].map(c => c.checked);
-            datos[cama].push({ texto: span.textContent.trim(), checks });
+            datos[camaNombre].push({ texto: tareaSpan.textContent.trim(), checks });
 
             // Aplicar estilo si todas las casillas están marcadas
             const allChecked = checks.every(c => c === true);
             if (allChecked) {
-              span.classList.add('completed-task');
-              if (!span.innerHTML.includes('✅')) {
-                span.innerHTML += ' ✅';
+              tareaSpan.classList.add('completed-task');
+              if (!tareaSpan.innerHTML.includes('✅')) {
+                tareaSpan.innerHTML += ' ✅';
               }
             } else {
-              span.classList.remove('completed-task');
-              span.innerHTML = span.innerHTML.replace(' ✅', '');
+              tareaSpan.classList.remove('completed-task');
+              tareaSpan.innerHTML = tareaSpan.innerHTML.replace(' ✅', '');
             }
           });
         }
       });
+      // Guardar los nombres de cama personalizados
+      datos['_nombresCamas'] = nombresCamas;
       localStorage.setItem('tareas', JSON.stringify(datos));
     }
 
@@ -559,8 +592,28 @@
           ];
         }
       }
+      // Restaurar los nombres de cama personalizados si existen
+      const nombresCamas = datos['_nombresCamas'] || {};
+      for (const camaId in nombresCamas) {
+        const formatted = nombresCamas[camaId];
+        document.querySelectorAll(`[data-cama-id="${camaId}"]`).forEach(elm => elm.textContent = formatted);
+        const option = document.querySelector(`#cama option[value="${camaId}"]`);
+        if (option) option.textContent = formatted;
+      }
+      // Helper to normalize for matching
+      const normalize = str => (str || '').trim().toUpperCase();
       for (const cama in datos) {
-        const h3 = [...document.querySelectorAll('h3')].find(h => h.textContent.trim() === cama);
+        if (cama === '_nombresCamas') continue;
+        // Buscar el h3 cuyo nombre (por span data-cama-id o text) coincide con cama (normalizado)
+        let h3 = null;
+        for (const h of document.querySelectorAll('h3')) {
+          const s = h.querySelector('[data-cama-id]');
+          let h3Nombre = s ? s.textContent.trim() : h.textContent.trim();
+          if (normalize(h3Nombre) === normalize(cama)) {
+            h3 = h;
+            break;
+          }
+        }
         if (!h3) continue;
         const ul = h3.nextElementSibling;
         datos[cama].forEach(({ texto, checks }) => {
@@ -641,6 +694,119 @@
 
     window.addEventListener('load', cargarTareasGuardadas);
     window.addEventListener('beforeunload', guardarTareas);
+    // Hacer editable el número de cama con doble clic, excepto "Acumulado"
+    function setupCamaNameEditing() {
+      document.querySelectorAll('[data-cama-id]').forEach(el => {
+        // No permitir editar el botón "Acumulado"
+        if (
+          (el.id && el.id === 'acumulado-button') ||
+          (el.dataset.camaId && el.dataset.camaId.toLowerCase() === 'acumulado')
+        ) return;
+        el.addEventListener('dblclick', () => {
+          const camaId = el.dataset.camaId;
+          const current = el.textContent.trim();
+          const newNumber = prompt(`Editar número de cama ${camaId}`, current.match(/\d{1,3}/)?.[0] || '');
+          if (!newNumber || isNaN(newNumber) || newNumber < 1 || newNumber > 999) return;
+
+          const formatted = `CAMA ${parseInt(newNumber)}`;
+          // Actualizar todos los elementos con ese camaId
+          document.querySelectorAll(`[data-cama-id="${camaId}"]`).forEach(elm => elm.textContent = formatted);
+
+          // Actualizar también el select de añadir tarea
+          const option = document.querySelector(`#cama option[value="${camaId}"]`);
+          if (option) option.textContent = formatted;
+
+          // Actualizar las tareas en localStorage para reflejar el cambio de nombre de cama
+          let tareasData = JSON.parse(localStorage.getItem('tareas') || '{}');
+          const nombresCamas = tareasData['_nombresCamas'] || {};
+          // Cambiar la key en tareasData si es necesario
+          // Buscar la key antigua (antes del cambio)
+          let oldNombre = null;
+          for (const key in tareasData) {
+            if (key !== '_nombresCamas' && key.trim().toUpperCase() === current.trim().toUpperCase()) {
+              oldNombre = key;
+              break;
+            }
+          }
+          if (oldNombre && oldNombre !== formatted) {
+            tareasData[formatted] = tareasData[oldNombre];
+            delete tareasData[oldNombre];
+          }
+          nombresCamas[camaId] = formatted;
+          tareasData['_nombresCamas'] = nombresCamas;
+          localStorage.setItem('tareas', JSON.stringify(tareasData));
+
+          // --- NUEVO: Actualizar panel individual si está visible y data-bed ---
+          // Encuentra el panel individual visible
+          const individualPanel = document.querySelector(`.bed-panel[data-bed]`);
+          if (individualPanel && individualPanel.style.display !== 'none') {
+            // Cambia el título y el data-bed si corresponde
+            const bedPanelTitle = individualPanel.querySelector('.bed-panel-title');
+            if (bedPanelTitle) bedPanelTitle.textContent = formatted;
+            individualPanel.setAttribute('data-bed', formatted);
+          }
+          // --- FIN NUEVO ---
+
+          // Recargar la UI de tareas con los nuevos nombres
+          cargarTareasGuardadas();
+        });
+      });
+    }
+
+    window.addEventListener('load', setupCamaNameEditing);
+  </script>
+  <script>
+    // Recuperar nombres almacenados
+    let storedNames = JSON.parse(localStorage.getItem('bedNames')) || {};
+
+    // Eliminar cualquier nombre mal guardado del botón "acumulado"
+    if (storedNames['acumulado']) {
+      delete storedNames['acumulado'];
+      localStorage.setItem('bedNames', JSON.stringify(storedNames));
+    }
+
+    // Aplicar nombres a los botones
+    const bedButtons = document.querySelectorAll('.bed-button, [data-cama-id]');
+    bedButtons.forEach(button => {
+      const bedId = button.getAttribute('data-cama-id') || button.getAttribute('data-bed-id');
+      if (bedId === 'acumulado') {
+        button.textContent = 'ACUMULADO'; // Fuerza
+      } else if (storedNames[bedId]) {
+        button.textContent = storedNames[bedId];
+      }
+    });
+
+    // Gestión de navegación entre vistas acumulado y cama individual
+    document.querySelectorAll('.tab-button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const camaId = btn.dataset.camaId;
+
+        // Manejo de clases activas
+        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        if (camaId === 'acumulado') {
+          document.getElementById('acumulado-view').style.display = 'block';
+          document.getElementById('cama-view').style.display = 'none';
+        } else {
+          document.getElementById('acumulado-view').style.display = 'none';
+          document.getElementById('cama-view').style.display = 'block';
+
+          const today = new Date();
+          // Obtener nombres personalizados
+          let tareasData = JSON.parse(localStorage.getItem('tareas') || '{}');
+          const nombresCamas = tareasData['_nombresCamas'] || {};
+          let nombreCama = nombresCamas[camaId] || `CAMA ${camaId}`;
+          // Actualizar el título y el atributo data-bed del panel individual
+          const camaPanel = document.querySelector('.bed-panel.cama-panel');
+          if (camaPanel) {
+            camaPanel.setAttribute('data-bed', nombreCama);
+            const title = camaPanel.querySelector('.bed-panel-title');
+            if (title) title.textContent = `Plan ${nombreCama} • ${today.toLocaleDateString('es-PE')}`;
+          }
+        }
+      });
+    });
   </script>
 </body>
   <footer style="text-align: center; margin-top: 30px; padding: 12px; font-size: 14px; background-color: #f5f5f5; border-top: 1px solid #ccc;">
