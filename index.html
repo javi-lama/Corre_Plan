@@ -274,7 +274,28 @@
     <div id="cama-view" style="display: none; flex: 2.33;">
       <div class="bed-panel cama-panel" style="background: #f0f4ff; padding: 20px; border-radius: 10px;" data-bed="">
         <h2 class="bed-panel-title" id="cama-view-title"></h2>
-        <!-- futura información detallada de la cama -->
+        <!-- Aquí se construirá dinámicamente la vista de cama -->
+        <div class="bed-panel-container" style="display: flex; gap: 20px;">
+          <!-- Columna izquierda: Cajas clínicas -->
+          <div class="clinical-boxes" style="flex: 1;">
+            <div>
+              <h3>📝 Resumen de Historia Clínica</h3>
+              <textarea class="clinical-textarea" data-type="history" rows="8" style="width: 100%; resize: vertical;"></textarea>
+            </div>
+            <div>
+              <h3>🧠 Diagnósticos</h3>
+              <textarea class="clinical-textarea" data-type="diagnosis" rows="8" style="width: 100%; resize: vertical;"></textarea>
+            </div>
+            <div>
+              <h3>📈 Evolución & Resultados</h3>
+              <textarea class="clinical-textarea" data-type="evolution" rows="8" style="width: 100%; resize: vertical;"></textarea>
+            </div>
+          </div>
+
+          <!-- Columna centro y derecha quedan vacías por ahora -->
+          <div style="flex: 1;"></div>
+          <div style="flex: 1;"></div>
+        </div>
       </div>
     </div>
     <!-- Formulario de añadir tarea -->
@@ -351,6 +372,10 @@
   </section>
 
   <script>
+    // Global variable to track currentCama and camaSeleccionadaActual for dropdown logic
+    let currentCama = null;
+    // Holds the currently active bed number when viewing a specific bed window
+    let camaSeleccionadaActual = null;
     const today = new Date();
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     const formattedDate = today.toLocaleDateString('es-PE', options);
@@ -419,116 +444,144 @@
     // Reutilizamos el select ya definido arriba
     // const accionSelect = document.getElementById('accion');
 
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
+// Helper to determine if "Acumulado" is selected (tab-button active)
+function isAcumuladoSelected() {
+  const activeTab = document.querySelector('.tab-button.active');
+  return activeTab && (activeTab.dataset.camaId === 'acumulado');
+}
 
-      const camaId = camaSelect.value;
-      if (!camaId) return alert("Seleccione una cama para añadir tarea.");
+form.addEventListener("submit", function(event) {
+  event.preventDefault();
 
-      // Leer nombres de cama personalizados desde localStorage
-      let tareasData = JSON.parse(localStorage.getItem('tareas') || '{}');
-      const nombresCamas = tareasData['_nombresCamas'] || {};
-      // Nombre mostrado para esta camaId
-      let nombreCama = nombresCamas[camaId] || `CAMA ${camaId}`;
-      // Normalizar para comparación
-      const normalize = str => (str || '').trim().toUpperCase();
+  const camaSelect = document.getElementById("cama");
+  const tareaInput = document.getElementById("otro");
+  const camaActual = camaSelect.value;
 
-      let nuevaTarea = '';
-      if (accionSelect.value) {
-        if (accionSelect.value === 'alta') nuevaTarea = 'Alta médica';
-        else if (accionSelect.value === 'hc') nuevaTarea = 'Realizar Historia Clínica';
-        else if (accionSelect.value === 'evolucionar') nuevaTarea = 'Evolucionar paciente';
-      }
-      if (imagenInput.value.trim()) nuevaTarea += (nuevaTarea ? ' + ' : '') + `Imagen: ${imagenInput.value.trim()}`;
-      if (labInput.value.trim()) nuevaTarea += (nuevaTarea ? ' + ' : '') + `Lab: ${labInput.value.trim()}`;
-      if (interconsultaInput.value.trim()) nuevaTarea += (nuevaTarea ? ' + ' : '') + `IC: ${interconsultaInput.value.trim()}`;
-      if (otroTextarea.value.trim()) nuevaTarea += (nuevaTarea ? ' + ' : '') + otroTextarea.value.trim();
-      if (!nuevaTarea) return alert("Debe ingresar al menos un tipo de tarea.");
+  // Procede con la creación de la tarea como ya esté implementado
+  const camaId = camaSelect.value;
+  if (!camaId) return alert("Seleccione una cama para añadir tarea.");
 
-      // Buscar el <h3> correspondiente y su siguiente <ul> usando nombre actualizado
-      let ul = null;
-      document.querySelectorAll('h3').forEach(h3 => {
-        // Usar el span con data-cama-id si existe
-        const span = h3.querySelector('[data-cama-id]');
-        let h3Nombre = span ? span.textContent : h3.textContent;
-        if (normalize(h3Nombre) === normalize(nombreCama)) {
-          ul = h3.nextElementSibling;
-        }
-      });
-      if (!ul) return alert('No se encontró la cama seleccionada.');
+  // Leer nombres de cama personalizados desde localStorage
+  let tareasData = JSON.parse(localStorage.getItem('tareas') || '{}');
+  const nombresCamas = tareasData['_nombresCamas'] || {};
+  // Nombre mostrado para esta camaId
+  let nombreCama = nombresCamas[camaId] || `CAMA ${camaId}`;
+  // Normalizar para comparación
+  const normalize = str => (str || '').trim().toUpperCase();
 
-      const li = document.createElement('li');
-      li.style.display = 'flex';
-      li.style.justifyContent = 'space-between';
-      li.style.alignItems = 'flex-start';
-      const numChecks = (accionSelect.value === 'alta' || accionSelect.value === 'hc' || accionSelect.value === 'evolucionar') ? 1 : 3;
-      let checksHTML = '';
-      for (let i = 0; i < numChecks; i++) {
-        checksHTML += '<input type="checkbox" /> ';
-      }
-      li.innerHTML = `
-        <span style="max-width: 70%; margin-left: -14px;">${nuevaTarea}</span>
-        <div class="task-checkboxes">
-          ${checksHTML}
-          <span class="edit-task" title="Editar tarea">✏️</span>
-          <span class="delete-task" title="Eliminar tarea">🗑️</span>
-        </div>
-      `;
-      ul.appendChild(li);
-      // Agregar listeners a los checkboxes para guardarTareas
-      li.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-        cb.addEventListener('change', guardarTareas);
-      });
+  let nuevaTarea = '';
+  if (accionSelect.value) {
+    if (accionSelect.value === 'alta') nuevaTarea = 'Alta médica';
+    else if (accionSelect.value === 'hc') nuevaTarea = 'Realizar Historia Clínica';
+    else if (accionSelect.value === 'evolucionar') nuevaTarea = 'Evolucionar paciente';
+  }
+  if (imagenInput.value.trim()) nuevaTarea += (nuevaTarea ? ' + ' : '') + `Imagen: ${imagenInput.value.trim()}`;
+  if (labInput.value.trim()) nuevaTarea += (nuevaTarea ? ' + ' : '') + `Lab: ${labInput.value.trim()}`;
+  if (interconsultaInput.value.trim()) nuevaTarea += (nuevaTarea ? ' + ' : '') + `IC: ${interconsultaInput.value.trim()}`;
+  if (otroTextarea.value.trim()) nuevaTarea += (nuevaTarea ? ' + ' : '') + otroTextarea.value.trim();
+  if (!nuevaTarea) return alert("Debe ingresar al menos un tipo de tarea.");
+
+  // Buscar el <h3> correspondiente y su siguiente <ul> usando nombre actualizado
+  let ul = null;
+  document.querySelectorAll('h3').forEach(h3 => {
+    // Usar el span con data-cama-id si existe
+    const span = h3.querySelector('[data-cama-id]');
+    let h3Nombre = span ? span.textContent : h3.textContent;
+    if (normalize(h3Nombre) === normalize(nombreCama)) {
+      ul = h3.nextElementSibling;
+    }
+  });
+  if (!ul) return alert('No se encontró la cama seleccionada.');
+
+  const li = document.createElement('li');
+  li.style.display = 'flex';
+  li.style.justifyContent = 'space-between';
+  li.style.alignItems = 'flex-start';
+  const numChecks = (accionSelect.value === 'alta' || accionSelect.value === 'hc' || accionSelect.value === 'evolucionar') ? 1 : 3;
+  let checksHTML = '';
+  for (let i = 0; i < numChecks; i++) {
+    checksHTML += '<input type="checkbox" /> ';
+  }
+  li.innerHTML = `
+    <span style="max-width: 70%; margin-left: -14px;">${nuevaTarea}</span>
+    <div class="task-checkboxes">
+      ${checksHTML}
+      <span class="edit-task" title="Editar tarea">✏️</span>
+      <span class="delete-task" title="Eliminar tarea">🗑️</span>
+    </div>
+  `;
+  ul.appendChild(li);
+  // Agregar listeners a los checkboxes para guardarTareas
+  li.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.addEventListener('change', guardarTareas);
+  });
+  guardarTareas();
+
+  li.querySelector('.delete-task').addEventListener('click', function () {
+    if (confirm('¿Deseas eliminar esta tarea?')) {
+      li.remove();
       guardarTareas();
+    }
+  });
 
-      li.querySelector('.delete-task').addEventListener('click', function () {
-        if (confirm('¿Deseas eliminar esta tarea?')) {
-          li.remove();
-          guardarTareas();
-        }
-      });
+  // Edit task logic
+  li.querySelector('.edit-task').addEventListener('click', function () {
+    const span = li.querySelector('span');
+    const originalText = span.textContent.replace(' ✅', '').trim();
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = originalText;
+    input.style.width = '100%';
+    input.style.marginLeft = '-14px';
+    span.replaceWith(input);
+    input.focus();
 
-      // Edit task logic
-      li.querySelector('.edit-task').addEventListener('click', function () {
-        const span = li.querySelector('span');
-        const originalText = span.textContent.replace(' ✅', '').trim();
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.value = originalText;
-        input.style.width = '100%';
-        input.style.marginLeft = '-14px';
-        span.replaceWith(input);
-        input.focus();
+    const saveEdit = () => {
+      const newSpan = document.createElement('span');
+      newSpan.style.maxWidth = '70%';
+      newSpan.style.marginLeft = '-14px';
+      newSpan.textContent = input.value.trim();
+      if ([...li.querySelectorAll('input[type="checkbox"]')].every(c => c.checked)) {
+        newSpan.classList.add('completed-task');
+        newSpan.innerHTML += ' ✅';
+      }
+      input.replaceWith(newSpan);
+      guardarTareas();
+    };
 
-        const saveEdit = () => {
-          const newSpan = document.createElement('span');
-          newSpan.style.maxWidth = '70%';
-          newSpan.style.marginLeft = '-14px';
-          newSpan.textContent = input.value.trim();
-          if ([...li.querySelectorAll('input[type="checkbox"]')].every(c => c.checked)) {
-            newSpan.classList.add('completed-task');
-            newSpan.innerHTML += ' ✅';
-          }
-          input.replaceWith(newSpan);
-          guardarTareas();
-        };
-
-        input.addEventListener('blur', saveEdit);
-        input.addEventListener('keypress', (e) => {
-          if (e.key === 'Enter') {
-            saveEdit();
-          }
-        });
-      });
-
-      // Limpiar formulario
-      form.reset();
-      alertaDropdown.style.display = 'none';
-      usarAlertaDropdown.value = 'no';
-      // Rehabilitar campos de texto y el select de acción para el siguiente uso
-      accionSelect.value = '';
-      accionSelect.dispatchEvent(new Event('change'));
+    input.addEventListener('blur', saveEdit);
+    input.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        saveEdit();
+      }
     });
+  });
+
+  // Resetear el campo de tarea solamente
+  tareaInput.value = "";
+
+  // --- Dropdown logic for camaSelect ---
+  // Remove the old camaSelect.value = "" logic
+  // Instead, apply the dropdown lock/unlock logic:
+  if (!isAcumuladoSelected()) {
+    // Lock dropdown to current bed and disable
+    camaSelect.value = camaSeleccionadaActual;
+    camaSelect.disabled = true;
+  } else {
+    camaSelect.value = "";
+    camaSelect.disabled = false;
+  }
+
+  // Limpiar otros campos del formulario si es necesario
+  imagenInput.value = "";
+  labInput.value = "";
+  interconsultaInput.value = "";
+  otroTextarea.value = "";
+  alertaDropdown.style.display = 'none';
+  usarAlertaDropdown.value = 'no';
+  accionSelect.value = '';
+  accionSelect.dispatchEvent(new Event('change'));
+});
 
     function guardarTareas() {
       const datos = {};
@@ -702,13 +755,40 @@
           (el.id && el.id === 'acumulado-button') ||
           (el.dataset.camaId && el.dataset.camaId.toLowerCase() === 'acumulado')
         ) return;
-        el.addEventListener('dblclick', () => {
+        // Remove any previous dblclick event to avoid multiple handlers
+        el.removeEventListener('dblclick', el._camaEditHandler);
+        // Store the handler so we can remove it later if needed
+        el._camaEditHandler = function(event) {
+          // Prevent double prompt by stopping propagation if needed
+          event.stopPropagation();
           const camaId = el.dataset.camaId;
-          const current = el.textContent.trim();
-          const newNumber = prompt(`Editar número de cama ${camaId}`, current.match(/\d{1,3}/)?.[0] || '');
+          // Guardar el nombre original antes de cualquier cambio
+          el.setAttribute("data-prev-name", el.textContent.trim());
+          const originalName = el.textContent.trim();
+          const newNumber = prompt(`Editar número de cama ${camaId}`, originalName.match(/\d{1,3}/)?.[0] || '');
           if (!newNumber || isNaN(newNumber) || newNumber < 1 || newNumber > 999) return;
 
           const formatted = `CAMA ${parseInt(newNumber)}`;
+
+          // Validación: prevenir duplicación de número de cama
+          let tareasData = JSON.parse(localStorage.getItem('tareas') || '{}');
+          const nombresCamas = tareasData['_nombresCamas'] || {};
+          const normalize = str => (str || '').trim().toUpperCase();
+          const existingNumbers = Object.entries(nombresCamas)
+            .filter(([id, name]) => id !== camaId && normalize(name) !== 'ACUMULADO')
+            .map(([id, name]) => normalize(name));
+          for (let i = 1; i <= 20; i++) {
+            const idStr = String(i);
+            if (!nombresCamas[idStr] && idStr !== camaId) {
+              existingNumbers.push(normalize(`CAMA ${i}`));
+            }
+          }
+          if (existingNumbers.includes(normalize(formatted))) {
+            alert("Ese número de cama ya existe. Usa otro distinto.");
+            el.textContent = originalName;
+            return;
+          }
+
           // Actualizar todos los elementos con ese camaId
           document.querySelectorAll(`[data-cama-id="${camaId}"]`).forEach(elm => elm.textContent = formatted);
 
@@ -717,13 +797,9 @@
           if (option) option.textContent = formatted;
 
           // Actualizar las tareas en localStorage para reflejar el cambio de nombre de cama
-          let tareasData = JSON.parse(localStorage.getItem('tareas') || '{}');
-          const nombresCamas = tareasData['_nombresCamas'] || {};
-          // Cambiar la key en tareasData si es necesario
-          // Buscar la key antigua (antes del cambio)
           let oldNombre = null;
           for (const key in tareasData) {
-            if (key !== '_nombresCamas' && key.trim().toUpperCase() === current.trim().toUpperCase()) {
+            if (key !== '_nombresCamas' && normalize(key) === normalize(originalName)) {
               oldNombre = key;
               break;
             }
@@ -737,10 +813,8 @@
           localStorage.setItem('tareas', JSON.stringify(tareasData));
 
           // --- NUEVO: Actualizar panel individual si está visible y data-bed ---
-          // Encuentra el panel individual visible
           const individualPanel = document.querySelector(`.bed-panel[data-bed]`);
           if (individualPanel && individualPanel.style.display !== 'none') {
-            // Cambia el título y el data-bed si corresponde
             const bedPanelTitle = individualPanel.querySelector('.bed-panel-title');
             if (bedPanelTitle) bedPanelTitle.textContent = formatted;
             individualPanel.setAttribute('data-bed', formatted);
@@ -749,7 +823,27 @@
 
           // Recargar la UI de tareas con los nuevos nombres
           cargarTareasGuardadas();
-        });
+          // Actualizar la vista individual de cama si corresponde (para reflejar nombre y fecha actualizados)
+          updateBedView && updateBedView(camaId);
+    // Nueva función: actualizar la vista individual de cama (título y clinical boxes)
+    function updateBedView(bedId) {
+      const today = new Date();
+      // Obtener nombres personalizados
+      let tareasData = JSON.parse(localStorage.getItem('tareas') || '{}');
+      const nombresCamas = tareasData['_nombresCamas'] || {};
+      let nombreCama = nombresCamas[bedId] || `CAMA ${bedId}`;
+      // Actualizar el título y el atributo data-bed del panel individual
+      const camaPanel = document.querySelector('.bed-panel.cama-panel');
+      if (camaPanel) {
+        camaPanel.setAttribute('data-bed', nombreCama);
+        const title = camaPanel.querySelector('.bed-panel-title');
+        if (title) title.textContent = `Plan ${nombreCama} • ${today.toLocaleDateString('es-PE')}`;
+      }
+      // Actualizar clinical boxes
+      updateClinicalBoxes(bedId);
+    }
+        };
+        el.addEventListener('dblclick', el._camaEditHandler);
       });
     }
 
@@ -778,20 +872,91 @@
 
     // Gestión de navegación entre vistas acumulado y cama individual
     document.querySelectorAll('.tab-button').forEach(btn => {
+      // Remove any previous dblclick event to prevent duplicates
+      btn.removeEventListener('dblclick', btn._tabDblClickHandler);
+      btn._tabDblClickHandler = function(event) {
+        // Prevent double prompt by stopping propagation
+        event.stopPropagation();
+        // Edición de nombre de cama desde menú horizontal (tab-button)
+        const camaId = btn.dataset.camaId;
+        if (!camaId || camaId === 'acumulado') return;
+        // Guardar el nombre original antes de cualquier cambio
+        btn.setAttribute("data-prev-name", btn.textContent.trim());
+        const originalName = btn.textContent.trim();
+        const newNumber = prompt(`Editar número de cama ${camaId}`, originalName.match(/\d{1,3}/)?.[0] || '');
+        if (!newNumber || isNaN(newNumber) || newNumber < 1 || newNumber > 999) return;
+        const formatted = `CAMA ${parseInt(newNumber)}`;
+        // Validación: prevenir duplicación de número de cama
+        let tareasData = JSON.parse(localStorage.getItem('tareas') || '{}');
+        const nombresCamas = tareasData['_nombresCamas'] || {};
+        const normalize = str => (str || '').trim().toUpperCase();
+        const existingNumbers = Object.entries(nombresCamas)
+          .filter(([id, name]) => id !== camaId && normalize(name) !== 'ACUMULADO')
+          .map(([id, name]) => normalize(name));
+        for (let i = 1; i <= 20; i++) {
+          const idStr = String(i);
+          if (!nombresCamas[idStr] && idStr !== camaId) {
+            existingNumbers.push(normalize(`CAMA ${i}`));
+          }
+        }
+        if (existingNumbers.includes(normalize(formatted))) {
+          alert("Ese número de cama ya existe. Usa otro distinto.");
+          btn.textContent = originalName;
+          return;
+        }
+        // Actualizar todos los elementos con ese camaId
+        document.querySelectorAll(`[data-cama-id="${camaId}"]`).forEach(elm => elm.textContent = formatted);
+        // Actualizar también el select de añadir tarea
+        const option = document.querySelector(`#cama option[value="${camaId}"]`);
+        if (option) option.textContent = formatted;
+        // Actualizar las tareas en localStorage para reflejar el cambio de nombre de cama
+        let oldNombre = null;
+        for (const key in tareasData) {
+          if (key !== '_nombresCamas' && normalize(key) === normalize(originalName)) {
+            oldNombre = key;
+            break;
+          }
+        }
+        if (oldNombre && oldNombre !== formatted) {
+          tareasData[formatted] = tareasData[oldNombre];
+          delete tareasData[oldNombre];
+        }
+        nombresCamas[camaId] = formatted;
+        tareasData['_nombresCamas'] = nombresCamas;
+        localStorage.setItem('tareas', JSON.stringify(tareasData));
+        // Actualizar panel individual si está visible y data-bed
+        const individualPanel = document.querySelector(`.bed-panel[data-bed]`);
+        if (individualPanel && individualPanel.style.display !== 'none') {
+          const bedPanelTitle = individualPanel.querySelector('.bed-panel-title');
+          if (bedPanelTitle) bedPanelTitle.textContent = formatted;
+          individualPanel.setAttribute('data-bed', formatted);
+        }
+        cargarTareasGuardadas();
+      };
+      btn.addEventListener('dblclick', btn._tabDblClickHandler);
       btn.addEventListener('click', () => {
         const camaId = btn.dataset.camaId;
-
         // Manejo de clases activas
         document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-
+        const camaDropdown = document.getElementById("cama");
         if (camaId === 'acumulado') {
           document.getElementById('acumulado-view').style.display = 'block';
           document.getElementById('cama-view').style.display = 'none';
+          // Unlock dropdown when switching back to Acumulado
+          if (camaDropdown) {
+            camaDropdown.disabled = false;
+          }
+          currentCama = null;
+          camaSeleccionadaActual = null;
+          // On initial load of Acumulado, unlock dropdown
+          if (camaDropdown) {
+            camaDropdown.value = "";
+            camaDropdown.disabled = false;
+          }
         } else {
           document.getElementById('acumulado-view').style.display = 'none';
           document.getElementById('cama-view').style.display = 'block';
-
           const today = new Date();
           // Obtener nombres personalizados
           let tareasData = JSON.parse(localStorage.getItem('tareas') || '{}');
@@ -804,9 +969,48 @@
             const title = camaPanel.querySelector('.bed-panel-title');
             if (title) title.textContent = `Plan ${nombreCama} • ${today.toLocaleDateString('es-PE')}`;
           }
+          // Set and lock the dropdown to current bed
+          if (camaDropdown) {
+            camaDropdown.value = camaId;
+            camaDropdown.disabled = true;
+          }
+          // Update global currentCama variable
+          currentCama = camaId;
+          camaSeleccionadaActual = camaId;
+          // Lock the dropdown on initial load of the bed window
+          if (camaDropdown) {
+            if (!isAcumuladoSelected()) {
+              camaDropdown.value = camaSeleccionadaActual;
+              camaDropdown.disabled = true;
+            } else {
+              camaDropdown.disabled = false;
+            }
+          }
+          // Llamar a la función para actualizar las clinical boxes:
+          showBedView(camaId);
         }
       });
     });
+    // Función para actualizar las clinical boxes (guardar y recuperar por cama)
+    function updateClinicalBoxes(bedId) {
+      const types = ['history', 'diagnosis', 'evolution'];
+      types.forEach(type => {
+        const key = `${bedId}_clinical_${type}`;
+        const textarea = document.querySelector(`textarea[data-type="${type}"]`);
+        if (textarea) {
+          textarea.value = localStorage.getItem(key) || '';
+          textarea.oninput = () => {
+            localStorage.setItem(key, textarea.value);
+          };
+        }
+      });
+    }
+
+    // Función para mostrar la vista de cama y actualizar las clinical boxes
+    function showBedView(bedId) {
+      // Asume que ya se ha mostrado el panel individual y actualizado el título
+      updateClinicalBoxes(bedId);
+    }
   </script>
 </body>
   <footer style="text-align: center; margin-top: 30px; padding: 12px; font-size: 14px; background-color: #f5f5f5; border-top: 1px solid #ccc;">
@@ -816,3 +1020,25 @@
   </footer>
 </body>
 </html>
+    // Función para actualizar el select de camas según el contexto (bloquear cuando en vista de cama)
+    function updateCamaSelect() {
+      const mainPanel = document.getElementById('cama-view');
+      // Si estamos mostrando la vista de una cama específica, bloquear select
+      if (mainPanel && mainPanel.style.display !== 'none' && mainPanel.classList.contains("showing-cama")) {
+        camaSelect.innerHTML = `<option value="${currentCama}" selected>CAMA ${currentCama}</option>`;
+        camaSelect.disabled = true;
+        return;
+      }
+      // Si el panel .showing-cama es por clase (usada en otras partes), usar también:
+      if (mainPanel && mainPanel.classList.contains("showing-cama")) {
+        camaSelect.innerHTML = `<option value="${currentCama}" selected>CAMA ${currentCama}</option>`;
+        camaSelect.disabled = true;
+        return;
+      }
+      // Si no, mostrar todas las opciones y desbloquear
+      camaSelect.innerHTML = '<option value="">Seleccione</option>';
+      for (let i = 1; i <= 20; i++) {
+        camaSelect.innerHTML += `<option value="${i}">CAMA ${i}</option>`;
+      }
+      camaSelect.disabled = false;
+    }
