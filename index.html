@@ -568,16 +568,31 @@
           li.style.display = 'flex';
           li.style.justifyContent = 'space-between';
           li.style.alignItems = 'flex-start';
+          let checksHTML = '';
+          for (let i = 0; i < checks.length; i++) {
+            checksHTML += `<input type="checkbox" ${checks[i] ? 'checked' : ''}/> `;
+          }
+
           li.innerHTML = `
             <span style="max-width: 70%; margin-left: -14px;">${texto}</span>
             <div class="task-checkboxes">
-              <input type="checkbox" ${checks && checks[0] ? 'checked' : ''}/> 
-              <input type="checkbox" ${checks && checks[1] ? 'checked' : ''}/> 
-              <input type="checkbox" ${checks && checks[2] ? 'checked' : ''}/>
+              ${checksHTML}
               <span class="edit-task" title="Editar tarea">✏️</span>
               <span class="delete-task" title="Eliminar tarea">🗑️</span>
             </div>
           `;
+
+          const span = li.querySelector('span');
+          const allChecked = checks.every(c => c === true);
+          if (allChecked) {
+            span.classList.add('completed-task');
+            if (!span.innerHTML.includes('✅')) {
+              span.innerHTML += ' ✅';
+            }
+          } else {
+            span.classList.remove('completed-task');
+            span.innerHTML = span.innerHTML.replace(' ✅', '');
+          }
           ul.appendChild(li);
           li.querySelector('.delete-task').addEventListener('click', function () {
             if (confirm('¿Deseas eliminar esta tarea?')) {
