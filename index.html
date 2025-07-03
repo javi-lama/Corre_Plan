@@ -335,14 +335,18 @@
         const tareaTexto = document.createElement('span');
         tareaTexto.textContent = (tarea.texto || tarea.text || '');
 
-        // Crear el contenedor de checkboxes
+        // Crear el contenedor de checkboxes interactivos
         const checkboxContainer = document.createElement('div');
         checkboxContainer.className = 'task-checkboxes';
         for (let i = 0; i < numChecks; i++) {
           const checkbox = document.createElement('input');
           checkbox.type = 'checkbox';
-          checkbox.disabled = true;
           checkbox.checked = tarea.checks[i];
+          // Usar atributos data para identificar la tarea y el índice del checkbox
+          checkbox.setAttribute('data-bed', camaNumber);
+          checkbox.setAttribute('data-index', index);
+          checkbox.setAttribute('data-check-idx', i);
+          // No disabled: interactivo
           checkboxContainer.appendChild(checkbox);
         }
 
@@ -386,6 +390,38 @@
         }
       }
     }
+
+    // --- EVENTO PARA CHECKBOXES INTERACTIVOS EN VISTA CAMA ---
+    // Se asegura que localStorage y la UI se mantengan sincronizadas
+    document.getElementById('cama-view').addEventListener('change', function (e) {
+      if (
+        e.target.matches("input[type='checkbox'][data-bed][data-index][data-check-idx]")
+      ) {
+        // Obtener identificadores
+        const camaNumber = e.target.getAttribute('data-bed');
+        const tareaIdx = parseInt(e.target.getAttribute('data-index'));
+        const checkIdx = parseInt(e.target.getAttribute('data-check-idx'));
+        // Leer datos actuales
+        let tareasData = JSON.parse(localStorage.getItem('tareas')) || {};
+        const nombresCamas = tareasData['_nombresCamas'] || {};
+        let nombreCama = nombresCamas[camaNumber] || `CAMA ${camaNumber}`;
+        const tareas = tareasData[nombreCama] || [];
+        // Actualizar el valor del check correspondiente
+        if (
+          Array.isArray(tareas) &&
+          tareas[tareaIdx] &&
+          Array.isArray(tareas[tareaIdx].checks)
+        ) {
+          tareas[tareaIdx].checks[checkIdx] = e.target.checked;
+          // Guardar y volver a renderizar ambas vistas
+          tareasData[nombreCama] = tareas;
+          localStorage.setItem('tareas', JSON.stringify(tareasData));
+          // Vuelve a renderizar panel acumulado y cama activa
+          renderTareas();
+          renderFilteredTasks(camaNumber);
+        }
+      }
+    });
   </script>
         </div>
       </div>
