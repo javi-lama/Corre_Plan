@@ -718,37 +718,62 @@ form.addEventListener("submit", function(event) {
       // Guardar los nombres de cama personalizados
       datos['_nombresCamas'] = nombresCamas;
       localStorage.setItem('tareas', JSON.stringify(datos));
+      // Unificar renderizado tras guardar
+      renderTareas();
     }
 
     function cargarTareasGuardadas() {
-      // Limpiar todas las listas antes de cargar (para evitar duplicados)
+      renderTareas();
+    }
+
+    window.addEventListener('load', cargarTareasGuardadas);
+    window.addEventListener('beforeunload', guardarTareas);
+
+    // --- NUEVAS FUNCIONES DE RENDER UNIFICADO ---
+    // Crea un div visual de tarea para el panel acumulado y para camas
+    function crearElementoTarea(tarea, index) {
+      const tareaDiv = document.createElement("div");
+      tareaDiv.className = "tarea";
+      const texto = document.createElement("span");
+      texto.textContent = tarea.texto;
+      const checksContainer = document.createElement("span");
+      checksContainer.style.marginLeft = "10px";
+      for (let i = 0; i < (tarea.checks ? tarea.checks.length : 3); i++) {
+        const check = document.createElement("input");
+        check.type = "checkbox";
+        check.checked = tarea.checks && tarea.checks[i];
+        check.disabled = true;
+        checksContainer.appendChild(check);
+      }
+      if (tarea.checks?.every(c => c)) {
+        tareaDiv.classList.add("completado");
+        texto.innerHTML += " ✅";
+      }
+      tareaDiv.appendChild(texto);
+      tareaDiv.appendChild(checksContainer);
+      return tareaDiv;
+    }
+
+    // Renderiza todas las tareas acumuladas y por cama
+    function renderTareas() {
+      // Panel acumulado
+      const tareasData = JSON.parse(localStorage.getItem("tareas")) || {};
+      // Limpiar todos los UL de camas acumuladas
       document.querySelectorAll('h3').forEach(h3 => {
         const ul = h3.nextElementSibling;
         if (ul) ul.innerHTML = '';
       });
-      // Cargar tareas guardadas o, si no hay, cargar ejemplos por defecto
-      let datos = JSON.parse(localStorage.getItem('tareas') || '{}');
-      if (!localStorage.getItem('tareas')) {
-        // Si no hay tareas guardadas, cargar ejemplos por defecto
-        datos = {};
-        for (let i = 1; i <= 20; i++) {
-          datos[`CAMA ${i}`] = [
-            { texto: 'Ejemplo 1 de tarea', checks: [false, false, false] },
-            { texto: 'Ejemplo 2 de tarea', checks: [false, false, false] }
-          ];
-        }
-      }
       // Restaurar los nombres de cama personalizados si existen
-      const nombresCamas = datos['_nombresCamas'] || {};
+      const nombresCamas = tareasData['_nombresCamas'] || {};
       for (const camaId in nombresCamas) {
         const formatted = nombresCamas[camaId];
         document.querySelectorAll(`[data-cama-id="${camaId}"]`).forEach(elm => elm.textContent = formatted);
         const option = document.querySelector(`#cama option[value="${camaId}"]`);
         if (option) option.textContent = formatted;
       }
-      // Helper to normalize for matching
+      // Helper para normalizar
       const normalize = str => (str || '').trim().toUpperCase();
-      for (const cama in datos) {
+      for (const cama in tareasData) {
         if (cama === '_nombresCamas') continue;
         // Buscar el h3 cuyo nombre (por span data-cama-id o text) coincide con cama (normalizado)
         let h3 = null;
@@ -762,28 +787,27 @@ form.addEventListener("submit", function(event) {
         }
         if (!h3) continue;
         const ul = h3.nextElementSibling;
-        datos[cama].forEach(({ texto, checks }) => {
+        tareasData[cama].forEach((tarea, idx) => {
           const li = document.createElement('li');
           li.style.display = 'flex';
           li.style.justifyContent = 'space-between';
           li.style.alignItems = 'flex-start';
+          // Crear checkboxes
           let checksHTML = '';
-          for (let i = 0; i < checks.length; i++) {
-            checksHTML += `<input type="checkbox" ${checks[i] ? 'checked' : ''}/> `;
+          for (let i = 0; i < (tarea.checks ? tarea.checks.length : 3); i++) {
+            checksHTML += `<input type="checkbox" ${tarea.checks && tarea.checks[i] ? 'checked' : ''}/> `;
           }
-
           // Cambiar el orden: texto primero, luego los checkboxes
           li.innerHTML = `
-            <span style="max-width: 70%; margin-left: -14px;">${texto}</span>
+            <span style="max-width: 70%; margin-left: -14px;">${tarea.texto}</span>
             <div class="task-checkboxes">
               <span class="edit-task" title="Editar tarea">✏️</span>
               <span class="delete-task" title="Eliminar tarea">🗑️</span>
               ${checksHTML}
             </div>
           `;
-
           const span = li.querySelector('span');
-          const allChecked = checks.every(c => c === true);
+          const allChecked = tarea.checks && tarea.checks.every(c => c === true);
           if (allChecked) {
             span.classList.add('completed-task');
             if (!span.innerHTML.includes('✅')) {
@@ -800,8 +824,12 @@ form.addEventListener("submit", function(event) {
               guardarTareas();
             }
           });
-          li.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-            cb.addEventListener('change', guardarTareas);
+          li.querySelectorAll('input[type="checkbox"]').forEach((cb, idx2) => {
+            cb.addEventListener('change', function() {
+              // Actualizar el check correspondiente en tarea
+              tarea.checks[idx2] = cb.checked;
+              guardarTareas();
+            });
           });
           // Edit task logic
           li.querySelector('.edit-task').addEventListener('click', function () {
@@ -814,7 +842,6 @@ form.addEventListener("submit", function(event) {
             input.style.marginLeft = '-14px';
             span.replaceWith(input);
             input.focus();
-
             const saveEdit = () => {
               const newSpan = document.createElement('span');
               newSpan.style.maxWidth = '70%';
@@ -825,9 +852,10 @@ form.addEventListener("submit", function(event) {
                 newSpan.innerHTML += ' ✅';
               }
               input.replaceWith(newSpan);
+              // Actualizar el texto de la tarea
+              tarea.texto = input.value.trim();
               guardarTareas();
             };
-
             input.addEventListener('blur', saveEdit);
             input.addEventListener('keypress', (e) => {
               if (e.key === 'Enter') {
@@ -837,10 +865,36 @@ form.addEventListener("submit", function(event) {
           });
         });
       }
+      // Renderizar tareas por cama en ventanas de cama
+      renderTareasPorCama();
     }
 
-    window.addEventListener('load', cargarTareasGuardadas);
-    window.addEventListener('beforeunload', guardarTareas);
+    // Renderiza tareas filtradas en cada ventana de cama individual
+    function renderTareasPorCama() {
+      const tareasData = JSON.parse(localStorage.getItem("tareas")) || {};
+      const camas = document.querySelectorAll(".bed-panel.cama-panel");
+      // Si no hay paneles .cama-panel, intentar .cama-window (legacy)
+      if (camas.length === 0) return;
+      camas.forEach(camaDiv => {
+        let camaId = camaDiv.getAttribute('data-bed');
+        // camaId puede ser 'CAMA 1', etc. Obtener id numérico
+        let idNum = null;
+        const m = camaId && camaId.match(/\d+/);
+        if (m) idNum = m[0];
+        // Buscar contenedor de tareas filtradas
+        const contenedor = camaDiv.querySelector("#filtered-task-container");
+        if (!contenedor) return;
+        contenedor.innerHTML = "";
+        // Buscar nombre personalizado
+        const nombresCamas = tareasData['_nombresCamas'] || {};
+        let nombreCama = nombresCamas[idNum] || `CAMA ${idNum}`;
+        const tareasCama = tareasData[nombreCama] || [];
+        tareasCama.forEach((tarea, index) => {
+          const tareaDiv = crearElementoTarea(tarea, index);
+          contenedor.appendChild(tareaDiv);
+        });
+      });
+    }
     // Hacer editable el número de cama con doble clic, excepto "Acumulado"
     function setupCamaNameEditing() {
       document.querySelectorAll('[data-cama-id]').forEach(el => {
