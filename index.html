@@ -388,14 +388,16 @@
           checks: tarea.checks
         });
 
-        // Evento para eliminar tarea en la vista cama
-        deleteBtn.addEventListener('click', () => {
-          // Eliminar la tarea del array y guardar
-          tareas.splice(index, 1);
-          tareasData[nombreCama] = tareas;
-          localStorage.setItem('tareas', JSON.stringify(tareasData));
-          renderAccumulatedTasks && renderAccumulatedTasks();
-          renderFilteredTasks(camaNumber);
+        // Evento para eliminar tarea en la vista cama (con confirmación)
+        deleteBtn.addEventListener("click", () => {
+          const confirmDelete = confirm("¿Estás seguro de que deseas eliminar esta tarea?");
+          if (confirmDelete) {
+              tareas.splice(index, 1);
+              tareasData[nombreCama] = tareas;
+              localStorage.setItem("tareas", JSON.stringify(tareasData));
+              renderAccumulatedTasks && renderAccumulatedTasks();
+              renderFilteredTasks(camaNumber);
+          }
         });
 
         taskContainer.appendChild(tareaDiv);
