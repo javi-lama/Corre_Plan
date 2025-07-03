@@ -108,6 +108,14 @@
       padding: 4px 6px;
     }
 
+    /* Nueva clase para alinear tareas y checkboxes en la vista cama */
+    #cama-view .task-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2px 0;
+    }
+
     /* Mejorado botón submit */
     button[type="submit"] {
       width: 100%;
@@ -292,9 +300,93 @@
             </div>
           </div>
 
-          <!-- Columna centro y derecha quedan vacías por ahora -->
+          <!-- Columna centro: Tareas filtradas por cama -->
+          <div style="flex: 1;">
+            <h3>Tareas para esta cama</h3>
+            <div id="filtered-task-container"></div>
+          </div>
+          <!-- Columna derecha vacía por ahora -->
           <div style="flex: 1;"></div>
-          <div style="flex: 1;"></div>
+  <script>
+    // Renderiza las tareas filtradas por cama en la vista individual
+    function renderFilteredTasks(camaNumber) {
+      const taskContainer = document.getElementById('filtered-task-container');
+      if (!taskContainer) return;
+      taskContainer.innerHTML = ''; // Limpiar tareas anteriores
+
+      // Recuperar tareas desde localStorage
+      let tareasData = JSON.parse(localStorage.getItem('tareas')) || {};
+      // Nombres personalizados
+      const nombresCamas = tareasData['_nombresCamas'] || {};
+      let nombreCama = nombresCamas[camaNumber] || `CAMA ${camaNumber}`;
+
+      // Buscar tareas para esa cama
+      const tareas = tareasData[nombreCama] || [];
+
+      tareas.forEach((tarea, index) => {
+        // Crear wrapper con la clase task-item para aplicar el estilo flex
+        const tareaDiv = document.createElement('div');
+        tareaDiv.classList.add('task-item');
+
+        // Determinar número de checkboxes
+        const numChecks = tarea.checks?.length || 0;
+
+        // Crear el span del texto
+        const tareaTexto = document.createElement('span');
+        tareaTexto.textContent = (tarea.texto || tarea.text || '');
+
+        // Crear el contenedor de checkboxes
+        const checkboxContainer = document.createElement('div');
+        checkboxContainer.className = 'task-checkboxes';
+        for (let i = 0; i < numChecks; i++) {
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.disabled = true;
+          checkbox.checked = tarea.checks[i];
+          checkboxContainer.appendChild(checkbox);
+        }
+
+        // Añadir primero el texto, luego los checkboxes
+        tareaDiv.appendChild(tareaTexto);
+        tareaDiv.appendChild(checkboxContainer);
+
+        // Lógica visual: aplicar fondo y emoji solo si todos los checks están marcados
+        updateTaskVisualsInBedView(tareaDiv, {
+          text: tarea.texto || tarea.text || '',
+          checks: tarea.checks
+        });
+
+        taskContainer.appendChild(tareaDiv);
+      });
+    }
+
+    // Corrige el bug visual del fondo verde y emoji en la vista de cama individual
+    function updateTaskVisualsInBedView(taskElement, taskData) {
+      const isCompleted = taskData.checks.every(Boolean);
+
+      // Actualizar fondo verde
+      if (isCompleted) {
+        taskElement.classList.add("completed");
+        taskElement.style.backgroundColor = "#d4edda";
+      } else {
+        taskElement.classList.remove("completed");
+        taskElement.style.backgroundColor = "";
+      }
+
+      // Eliminar cualquier emoji antiguo
+      let textOnly = taskData.text.replace(/✅/g, "").trim();
+
+      // Volver a colocar el texto limpio
+      // taskElement.childNodes[0] es el <span> con el texto
+      if (taskElement.childNodes[0]) {
+        taskElement.childNodes[0].textContent = textOnly;
+        // Añadir emoji si está completado
+        if (isCompleted) {
+          taskElement.childNodes[0].textContent += " ✅";
+        }
+      }
+    }
+  </script>
         </div>
       </div>
     </div>
@@ -502,12 +594,13 @@ form.addEventListener("submit", function(event) {
   for (let i = 0; i < numChecks; i++) {
     checksHTML += '<input type="checkbox" /> ';
   }
+  // Cambiar el orden: texto primero, luego los checkboxes
   li.innerHTML = `
     <span style="max-width: 70%; margin-left: -14px;">${nuevaTarea}</span>
     <div class="task-checkboxes">
-      ${checksHTML}
       <span class="edit-task" title="Editar tarea">✏️</span>
       <span class="delete-task" title="Eliminar tarea">🗑️</span>
+      ${checksHTML}
     </div>
   `;
   ul.appendChild(li);
@@ -679,12 +772,13 @@ form.addEventListener("submit", function(event) {
             checksHTML += `<input type="checkbox" ${checks[i] ? 'checked' : ''}/> `;
           }
 
+          // Cambiar el orden: texto primero, luego los checkboxes
           li.innerHTML = `
             <span style="max-width: 70%; margin-left: -14px;">${texto}</span>
             <div class="task-checkboxes">
-              ${checksHTML}
               <span class="edit-task" title="Editar tarea">✏️</span>
               <span class="delete-task" title="Eliminar tarea">🗑️</span>
+              ${checksHTML}
             </div>
           `;
 
@@ -988,6 +1082,8 @@ form.addEventListener("submit", function(event) {
           }
           // Llamar a la función para actualizar las clinical boxes:
           showBedView(camaId);
+          // Llamar a renderFilteredTasks para mostrar tareas filtradas en la vista individual
+          renderFilteredTasks(camaId);
         }
       });
     });
@@ -1020,25 +1116,3 @@ form.addEventListener("submit", function(event) {
   </footer>
 </body>
 </html>
-    // Función para actualizar el select de camas según el contexto (bloquear cuando en vista de cama)
-    function updateCamaSelect() {
-      const mainPanel = document.getElementById('cama-view');
-      // Si estamos mostrando la vista de una cama específica, bloquear select
-      if (mainPanel && mainPanel.style.display !== 'none' && mainPanel.classList.contains("showing-cama")) {
-        camaSelect.innerHTML = `<option value="${currentCama}" selected>CAMA ${currentCama}</option>`;
-        camaSelect.disabled = true;
-        return;
-      }
-      // Si el panel .showing-cama es por clase (usada en otras partes), usar también:
-      if (mainPanel && mainPanel.classList.contains("showing-cama")) {
-        camaSelect.innerHTML = `<option value="${currentCama}" selected>CAMA ${currentCama}</option>`;
-        camaSelect.disabled = true;
-        return;
-      }
-      // Si no, mostrar todas las opciones y desbloquear
-      camaSelect.innerHTML = '<option value="">Seleccione</option>';
-      for (let i = 1; i <= 20; i++) {
-        camaSelect.innerHTML += `<option value="${i}">CAMA ${i}</option>`;
-      }
-      camaSelect.disabled = false;
-    }
