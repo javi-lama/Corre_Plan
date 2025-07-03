@@ -326,7 +326,7 @@
       tareas.forEach((tarea, index) => {
         // Crear wrapper con la clase task-item para aplicar el estilo flex
         const tareaDiv = document.createElement('div');
-        tareaDiv.classList.add('task-item');
+        tareaDiv.classList.add('task-item', 'filtered-task');
 
         // Determinar número de checkboxes
         const numChecks = tarea.checks?.length || 0;
@@ -346,6 +346,10 @@
           checkbox.setAttribute('data-bed', camaNumber);
           checkbox.setAttribute('data-index', index);
           checkbox.setAttribute('data-check-idx', i);
+          // NUEVO: para listeners globales
+          checkbox.classList.add('task-checkbox');
+          checkbox.setAttribute('data-id', index);
+          checkbox.setAttribute('data-type', i);
           // No disabled: interactivo
           checkboxContainer.appendChild(checkbox);
         }
@@ -362,6 +366,45 @@
 
         taskContainer.appendChild(tareaDiv);
       });
+
+      // --- NUEVO: Asignar listeners a los checkboxes de la vista filtrada ---
+      const checkboxes = document.querySelectorAll('.filtered-task .task-checkbox');
+      checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function () {
+          const taskId = this.getAttribute('data-id');
+          const checkboxType = this.getAttribute('data-type');
+          updateCheckboxState(taskId, checkboxType, this.checked);
+          renderAccumulatedTasks && renderAccumulatedTasks();
+          renderFilteredTasks(currentBedNumber || camaNumber);
+        });
+      });
+    }
+    // --- NUEVO: Función para actualizar el estado de un checkbox de tarea filtrada ---
+    function updateCheckboxState(taskId, checkboxType, checked) {
+      // taskId: índice de la tarea, checkboxType: índice del checkbox
+      // currentBedNumber puede no estar definido, usar camaSeleccionadaActual si es necesario
+      const camaNumber = currentBedNumber || camaSeleccionadaActual;
+      if (!camaNumber) return;
+      let tareasData = JSON.parse(localStorage.getItem('tareas')) || {};
+      const nombresCamas = tareasData['_nombresCamas'] || {};
+      let nombreCama = nombresCamas[camaNumber] || `CAMA ${camaNumber}`;
+      const tareas = tareasData[nombreCama] || [];
+      const tareaIdx = parseInt(taskId);
+      const checkIdx = parseInt(checkboxType);
+      if (
+        Array.isArray(tareas) &&
+        tareas[tareaIdx] &&
+        Array.isArray(tareas[tareaIdx].checks)
+      ) {
+        tareas[tareaIdx].checks[checkIdx] = checked;
+        tareasData[nombreCama] = tareas;
+        localStorage.setItem('tareas', JSON.stringify(tareasData));
+      }
+    }
+
+    // --- NUEVO: Función para renderizar tareas acumuladas (llamada en el listener) ---
+    function renderAccumulatedTasks() {
+      renderTareas && renderTareas();
     }
 
     // Corrige el bug visual del fondo verde y emoji en la vista de cama individual
@@ -710,7 +753,29 @@ form.addEventListener("submit", function(event) {
   usarAlertaDropdown.value = 'no';
   accionSelect.value = '';
   accionSelect.dispatchEvent(new Event('change'));
+
+  // --- NUEVO: Volver a renderizar tareas filtradas y asignar listeners de checkboxes ---
+  if (typeof renderFilteredTasks === "function" && camaSeleccionadaActual) {
+    renderFilteredTasks(camaSeleccionadaActual);
+  }
+  if (typeof assignCheckboxListeners === "function") {
+    assignCheckboxListeners();
+  }
 });
+
+// --- NUEVO: Función global para asignar listeners a los checkboxes de la vista filtrada ---
+function assignCheckboxListeners() {
+  const checkboxes = document.querySelectorAll('.filtered-task .task-checkbox');
+  checkboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', function () {
+      const taskId = this.getAttribute('data-id');
+      const checkboxType = this.getAttribute('data-type');
+      updateCheckboxState(taskId, checkboxType, this.checked);
+      renderAccumulatedTasks && renderAccumulatedTasks();
+      renderFilteredTasks(currentBedNumber || camaSeleccionadaActual);
+    });
+  });
+}
 
     function guardarTareas() {
       const datos = {};
