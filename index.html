@@ -116,6 +116,23 @@
       padding: 2px 0;
     }
 
+    /* Botón eliminar tarea en vista cama individual */
+    .delete-btn-cama {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      color: #c62828;
+      margin-left: 8px;
+      transition: transform 0.2s;
+      padding: 0 2px;
+    }
+    .delete-btn-cama:hover {
+      transform: scale(1.2);
+      background: #ffeaea;
+      border-radius: 6px;
+    }
+
     /* Mejorado botón submit */
     button[type="submit"] {
       width: 100%;
@@ -354,14 +371,31 @@
           checkboxContainer.appendChild(checkbox);
         }
 
-        // Añadir primero el texto, luego los checkboxes
+        // Crear el botón eliminar tarea para cama
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-btn-cama';
+        deleteBtn.title = 'Eliminar tarea';
+        deleteBtn.innerHTML = '🗑️';
+
+        // Añadir primero el texto, luego los checkboxes, luego el botón eliminar
         tareaDiv.appendChild(tareaTexto);
         tareaDiv.appendChild(checkboxContainer);
+        tareaDiv.appendChild(deleteBtn);
 
         // Lógica visual: aplicar fondo y emoji solo si todos los checks están marcados
         updateTaskVisualsInBedView(tareaDiv, {
           text: tarea.texto || tarea.text || '',
           checks: tarea.checks
+        });
+
+        // Evento para eliminar tarea en la vista cama
+        deleteBtn.addEventListener('click', () => {
+          // Eliminar la tarea del array y guardar
+          tareas.splice(index, 1);
+          tareasData[nombreCama] = tareas;
+          localStorage.setItem('tareas', JSON.stringify(tareasData));
+          renderAccumulatedTasks && renderAccumulatedTasks();
+          renderFilteredTasks(camaNumber);
         });
 
         taskContainer.appendChild(tareaDiv);
