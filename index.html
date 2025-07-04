@@ -420,87 +420,88 @@
       const tareas = tareasData[nombreCama] || [];
 
       tareas.forEach((tarea, index) => {
-        // Crear wrapper con la clase task-item para aplicar el estilo flex
-        const tareaDiv = document.createElement('div');
-        tareaDiv.classList.add('task-item', 'filtered-task');
+        // --- NUEVO: Estructura HTML unificada tipo panel acumulado ---
+        const taskDiv = document.createElement('div');
+        taskDiv.className = 'task filtered-task';
 
-        // Determinar número de checkboxes
-        const numChecks = tarea.checks?.length || 0;
+        // Texto de la tarea
+        const taskTextDiv = document.createElement('div');
+        taskTextDiv.className = 'task-text';
+        taskTextDiv.textContent = tarea.texto || tarea.text || '';
 
-        // Crear el span del texto
-        const tareaTexto = document.createElement('span');
-        tareaTexto.textContent = (tarea.texto || tarea.text || '');
+        // Contenedor de acciones y checkboxes
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'task-actions';
 
-        // Crear el contenedor de checkboxes interactivos
-        const checkboxContainer = document.createElement('div');
-        checkboxContainer.className = 'task-checkboxes';
+        // Generar checkboxes
+        const numChecks = Array.isArray(tarea.checks) ? tarea.checks.length : 0;
         for (let i = 0; i < numChecks; i++) {
           const checkbox = document.createElement('input');
           checkbox.type = 'checkbox';
           checkbox.checked = tarea.checks[i];
-          // Usar atributos data para identificar la tarea y el índice del checkbox
           checkbox.setAttribute('data-bed', camaNumber);
           checkbox.setAttribute('data-index', index);
           checkbox.setAttribute('data-check-idx', i);
-          // NUEVO: para listeners globales
           checkbox.classList.add('task-checkbox');
           checkbox.setAttribute('data-id', index);
           checkbox.setAttribute('data-type', i);
-          // No disabled: interactivo
-          checkboxContainer.appendChild(checkbox);
+          actionsDiv.appendChild(checkbox);
         }
 
-        // Crear el botón eliminar tarea para cama
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'action-button delete-btn-cama';
-        deleteBtn.title = 'Eliminar tarea';
-        deleteBtn.innerHTML = '🗑️';
-
-        // Crear el botón editar tarea para cama (usando prompt)
-        const editButton = document.createElement('button');
-        editButton.innerHTML = '✏️';
-        editButton.className = 'action-button edit-button';
-        editButton.title = 'Editar tarea';
-        editButton.addEventListener('click', () => {
-            const newText = prompt('Edita la tarea:', tarea.texto);
-            if (newText !== null && newText.trim() !== '') {
-                tarea.texto = newText.trim();
-                tareasData[nombreCama][index].texto = newText.trim();
-                localStorage.setItem('tareas', JSON.stringify(tareasData));
-                renderAccumulatedTasks && renderAccumulatedTasks();
-                renderFilteredTasks(camaNumber);
-            }
-        });
-
-        // Añadir primero el texto, luego los checkboxes, luego los botones
-        tareaDiv.appendChild(tareaTexto);
-        tareaDiv.appendChild(checkboxContainer);
-        tareaDiv.appendChild(editButton);
-        tareaDiv.appendChild(deleteBtn);
-
-        // Lógica visual: aplicar fondo y emoji solo si todos los checks están marcados
-        updateTaskVisualsInBedView(tareaDiv, {
-          text: tarea.texto || tarea.text || '',
-          checks: tarea.checks
-        });
-
-        // Evento para eliminar tarea en la vista cama (con confirmación)
-        deleteBtn.addEventListener("click", () => {
-          const confirmDelete = confirm("¿Estás seguro de que deseas eliminar esta tarea?");
-          if (confirmDelete) {
-              tareas.splice(index, 1);
-              tareasData[nombreCama] = tareas;
-              localStorage.setItem("tareas", JSON.stringify(tareasData));
-              renderAccumulatedTasks && renderAccumulatedTasks();
-              renderFilteredTasks(camaNumber);
+        // Botón editar
+        const editBtn = document.createElement('button');
+        editBtn.className = 'edit-task-button';
+        editBtn.title = 'Editar tarea';
+        editBtn.textContent = '✏️';
+        editBtn.addEventListener('click', () => {
+          const newText = prompt('Edita la tarea:', tarea.texto || tarea.text || '');
+          if (newText !== null && newText.trim() !== '') {
+            tarea.texto = newText.trim();
+            tareasData[nombreCama][index].texto = newText.trim();
+            localStorage.setItem('tareas', JSON.stringify(tareasData));
+            renderAccumulatedTasks && renderAccumulatedTasks();
+            renderFilteredTasks(camaNumber);
           }
         });
+        actionsDiv.appendChild(editBtn);
 
-        taskContainer.appendChild(tareaDiv);
+        // Botón eliminar
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-task-button';
+        deleteBtn.title = 'Eliminar tarea';
+        deleteBtn.textContent = '🗑️';
+        deleteBtn.addEventListener('click', () => {
+          const confirmDelete = confirm("¿Estás seguro de que deseas eliminar esta tarea?");
+          if (confirmDelete) {
+            tareas.splice(index, 1);
+            tareasData[nombreCama] = tareas;
+            localStorage.setItem("tareas", JSON.stringify(tareasData));
+            renderAccumulatedTasks && renderAccumulatedTasks();
+            renderFilteredTasks(camaNumber);
+          }
+        });
+        actionsDiv.appendChild(deleteBtn);
+
+        // Añadir texto y acciones al contenedor principal
+        taskDiv.appendChild(taskTextDiv);
+        taskDiv.appendChild(actionsDiv);
+
+        // Lógica visual: aplicar fondo y emoji solo si todos los checks están marcados
+        if (Array.isArray(tarea.checks) && tarea.checks.length && tarea.checks.every(Boolean)) {
+          taskDiv.classList.add('completed-task');
+          if (!taskTextDiv.textContent.includes('✅')) {
+            taskTextDiv.textContent += ' ✅';
+          }
+        } else {
+          taskDiv.classList.remove('completed-task');
+          taskTextDiv.textContent = (tarea.texto || tarea.text || '');
+        }
+
+        taskContainer.appendChild(taskDiv);
       });
 
-      // --- NUEVO: Asignar listeners a los checkboxes de la vista filtrada ---
-      const checkboxes = document.querySelectorAll('.filtered-task .task-checkbox');
+      // Asignar listeners a los checkboxes de la vista filtrada
+      const checkboxes = taskContainer.querySelectorAll('.task-checkbox');
       checkboxes.forEach(checkbox => {
         checkbox.addEventListener('change', function () {
           const taskId = this.getAttribute('data-id');
@@ -1023,68 +1024,87 @@ function assignCheckboxListeners() {
         if (!h3) continue;
         const ul = h3.nextElementSibling;
         tareasData[cama].forEach((tarea, idx) => {
+          // --- NUEVO: Estructura HTML según requerimiento ---
           const li = document.createElement('li');
-          li.style.display = 'flex';
-          li.style.justifyContent = 'space-between';
-          li.style.alignItems = 'flex-start';
-          // Crear checkboxes
-          let checksHTML = '';
-          for (let i = 0; i < (tarea.checks ? tarea.checks.length : 3); i++) {
-            checksHTML += `<input type="checkbox" ${tarea.checks && tarea.checks[i] ? 'checked' : ''}/> `;
+          li.style.listStyle = "none";
+          // Crear contenedor principal
+          const taskItemDiv = document.createElement('div');
+          taskItemDiv.className = 'task-item';
+          // Crear span del texto
+          const taskText = document.createElement('span');
+          taskText.className = 'task-text';
+          taskText.textContent = tarea.texto;
+          // Crear contenedor de controles
+          const taskControls = document.createElement('div');
+          taskControls.className = 'task-controls';
+          // Crear los checkboxes (mismo número que antes)
+          const numChecks = Array.isArray(tarea.checks) ? tarea.checks.length : 3;
+          for (let i = 0; i < numChecks; i++) {
+            const check = document.createElement('input');
+            check.type = 'checkbox';
+            check.checked = tarea.checks && tarea.checks[i];
+            taskControls.appendChild(check);
           }
-          // Cambiar el orden: texto primero, luego los checkboxes
-          li.innerHTML = `
-            <span style="max-width: 70%; margin-left: -14px;">${tarea.texto}</span>
-            <div class="task-checkboxes">
-              <span class="edit-task" title="Editar tarea">✏️</span>
-              <span class="delete-task" title="Eliminar tarea">🗑️</span>
-              ${checksHTML}
-            </div>
-          `;
-          const span = li.querySelector('span');
+          // Crear botón editar
+          const editBtn = document.createElement('span');
+          editBtn.className = 'edit-task-button';
+          editBtn.title = 'Editar tarea';
+          editBtn.textContent = '✏️';
+          taskControls.appendChild(editBtn);
+          // Crear botón eliminar
+          const deleteBtn = document.createElement('span');
+          deleteBtn.className = 'delete-task-button';
+          deleteBtn.title = 'Eliminar tarea';
+          deleteBtn.textContent = '🗑️';
+          taskControls.appendChild(deleteBtn);
+          // Añadir texto y controles al task-item
+          taskItemDiv.appendChild(taskText);
+          taskItemDiv.appendChild(taskControls);
+          // Si está completada, aplicar clase/fondo
           const allChecked = tarea.checks && tarea.checks.every(c => c === true);
           if (allChecked) {
-            span.classList.add('completed-task');
-            if (!span.innerHTML.includes('✅')) {
-              span.innerHTML += ' ✅';
+            taskItemDiv.classList.add('completed-task');
+            if (!taskText.innerHTML.includes('✅')) {
+              taskText.innerHTML += ' ✅';
             }
           } else {
-            span.classList.remove('completed-task');
-            span.innerHTML = span.innerHTML.replace(' ✅', '');
+            taskItemDiv.classList.remove('completed-task');
+            taskText.innerHTML = taskText.innerHTML.replace(' ✅', '');
           }
+          li.appendChild(taskItemDiv);
           ul.appendChild(li);
-          li.querySelector('.delete-task').addEventListener('click', function () {
+          // Listeners: eliminar
+          deleteBtn.addEventListener('click', function () {
             if (confirm('¿Deseas eliminar esta tarea?')) {
               li.remove();
               guardarTareas();
             }
           });
-          li.querySelectorAll('input[type="checkbox"]').forEach((cb, idx2) => {
+          // Listeners: checkboxes
+          taskControls.querySelectorAll('input[type="checkbox"]').forEach((cb, idx2) => {
             cb.addEventListener('change', function() {
-              // Actualizar el check correspondiente en tarea
               tarea.checks[idx2] = cb.checked;
               guardarTareas();
             });
           });
-          // Edit task logic
-          li.querySelector('.edit-task').addEventListener('click', function () {
-            const span = li.querySelector('span');
-            const originalText = span.textContent.replace(' ✅', '').trim();
+          // Listener: editar
+          editBtn.addEventListener('click', function () {
+            const originalText = taskText.textContent.replace(' ✅', '').trim();
             const input = document.createElement('input');
             input.type = 'text';
             input.value = originalText;
             input.style.width = '100%';
-            input.style.marginLeft = '-14px';
-            span.replaceWith(input);
+            taskText.replaceWith(input);
             input.focus();
             const saveEdit = () => {
               const newSpan = document.createElement('span');
-              newSpan.style.maxWidth = '70%';
-              newSpan.style.marginLeft = '-14px';
+              newSpan.className = 'task-text';
               newSpan.textContent = input.value.trim();
-              if ([...li.querySelectorAll('input[type="checkbox"]')].every(c => c.checked)) {
-                newSpan.classList.add('completed-task');
+              if ([...taskControls.querySelectorAll('input[type="checkbox"]')].every(c => c.checked)) {
+                taskItemDiv.classList.add('completed-task');
                 newSpan.innerHTML += ' ✅';
+              } else {
+                taskItemDiv.classList.remove('completed-task');
               }
               input.replaceWith(newSpan);
               // Actualizar el texto de la tarea
@@ -1119,99 +1139,68 @@ function assignCheckboxListeners() {
         // Si camaId está definido, solo renderizar esa cama
         if (camaId && idNum !== String(camaId)) return;
         // Buscar contenedor de tareas filtradas
-        const contenedor = camaDiv.querySelector("#filtered-task-container");
-        if (!contenedor) return;
-        contenedor.innerHTML = "";
+        const contenedorTareas = camaDiv.querySelector("#filtered-task-container");
+        if (!contenedorTareas) return;
+        contenedorTareas.innerHTML = "";
         // Buscar nombre personalizado
         const nombresCamas = tareasData['_nombresCamas'] || {};
         let nombreCama = nombresCamas[idNum] || `CAMA ${idNum}`;
-        const tareasCama = tareasData[nombreCama] || [];
-        tareasCama.forEach((tarea, index) => {
-          // Crear wrapper con la clase task-item para aplicar el estilo flex
-          const tareaDiv = document.createElement('div');
-          tareaDiv.classList.add('task-item', 'filtered-task');
-          // Determinar número de checkboxes
-          const numChecks = tarea.checks?.length || 0;
-          // Crear el span del texto
-          const tareaTexto = document.createElement('span');
-          tareaTexto.textContent = (tarea.texto || tarea.text || '');
-          // Crear el contenedor de checkboxes interactivos
-          const checkboxContainer = document.createElement('div');
-          checkboxContainer.className = 'task-checkboxes';
-          for (let i = 0; i < numChecks; i++) {
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.checked = tarea.checks[i];
-            // Usar atributos data para identificar la tarea y el índice del checkbox
-            checkbox.setAttribute('data-bed', idNum);
-            checkbox.setAttribute('data-index', index);
-            checkbox.setAttribute('data-check-idx', i);
-            // NUEVO: para listeners globales
-            checkbox.classList.add('task-checkbox');
-            checkbox.setAttribute('data-id', index);
-            checkbox.setAttribute('data-type', i);
-            // No disabled: interactivo
-            checkboxContainer.appendChild(checkbox);
-          }
-          // Crear el botón eliminar tarea para cama
-          const deleteBtn = document.createElement('button');
-          deleteBtn.className = 'action-button delete-btn-cama';
-          deleteBtn.title = 'Eliminar tarea';
-          deleteBtn.innerHTML = '🗑️';
-          // Crear el botón editar tarea para cama
-          const editBtn = document.createElement('button');
-          editBtn.className = 'action-button edit-btn';
-          editBtn.title = 'Editar tarea';
-          editBtn.innerHTML = '✏️';
-          // Añadir primero el texto, luego los checkboxes, luego los botones
-          tareaDiv.appendChild(tareaTexto);
-          tareaDiv.appendChild(checkboxContainer);
-          tareaDiv.appendChild(editBtn);
-          tareaDiv.appendChild(deleteBtn);
-          // Lógica visual: aplicar fondo y emoji solo si todos los checks están marcados
-          updateTaskVisualsInBedView(tareaDiv, {
-            text: tarea.texto || tarea.text || '',
-            checks: tarea.checks
-          });
-          // Evento para eliminar tarea en la vista cama (con confirmación)
-          deleteBtn.addEventListener("click", () => {
-            const confirmDelete = confirm("¿Estás seguro de que deseas eliminar esta tarea?");
-            if (confirmDelete) {
-                tareasCama.splice(index, 1);
-                tareasData[nombreCama] = tareasCama;
-                localStorage.setItem("tareas", JSON.stringify(tareasData));
-                renderAccumulatedTasks && renderAccumulatedTasks();
-                renderTareasPorCama(idNum);
-              }
-          });
-          // --- NUEVO: Editar tarea en línea con input, blur y Enter ---
-          editBtn.addEventListener("click", () => {
-            const input = document.createElement("input");
-            input.type = "text";
-            input.value = tarea.texto || tarea.text || '';
-            input.classList.add("edit-input");
-            const originalText = tareaTexto.textContent;
-            tareaTexto.replaceWith(input);
-            input.focus();
-            const saveEdit = () => {
-              const newText = input.value.trim();
-              if (newText && newText !== (tarea.texto || tarea.text)) {
-                // Actualizar la tarea en localStorage
-                tarea.texto = newText;
-                tareasData[nombreCama][index].texto = newText;
-                localStorage.setItem("tareas", JSON.stringify(tareasData));
-                if (typeof renderFilteredTasks === "function") renderFilteredTasks(idNum);
-                if (typeof renderTareas === "function") renderTareas();
-              } else {
-                input.replaceWith(tareaTexto);
-              }
-            };
-            input.addEventListener("blur", saveEdit);
-            input.addEventListener("keypress", (e) => {
-              if (e.key === "Enter") input.blur();
+        let tareas = tareasData[nombreCama] || [];
+        tareas.forEach((tarea, index) => {
+          // --- NUEVO: Estructura HTML coherente con plan acumulado ---
+          // Crear contenedor para la fila de tarea
+          const taskRow = document.createElement("div");
+          taskRow.classList.add("task-row");
+
+          // Elemento de texto de tarea
+          const taskTextSpan = document.createElement("span");
+          taskTextSpan.textContent = tarea.texto;
+          taskRow.appendChild(taskTextSpan);
+
+          // Añadir los checkboxes
+          for (let i = 0; i < (Array.isArray(tarea.checks) ? tarea.checks.length : 3); i++) {
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.checked = tarea.checks ? tarea.checks[i] : false;
+            checkbox.addEventListener("change", function () {
+              if (!Array.isArray(tarea.checks)) tarea.checks = [];
+              tarea.checks[i] = checkbox.checked;
+              guardarTareas();
             });
+            taskRow.appendChild(checkbox);
+          }
+
+          // Botón de editar
+          const editBtn = document.createElement("span");
+          editBtn.textContent = "✏️";
+          editBtn.style.cursor = "pointer";
+          editBtn.addEventListener("click", function () {
+            const nuevoTexto = prompt("Edita la tarea:", tarea.texto);
+            if (nuevoTexto !== null) {
+              tarea.texto = nuevoTexto;
+              guardarTareas();
+              renderTareasPorCama(idNum); // Recargar
+            }
           });
-          contenedor.appendChild(tareaDiv);
+          taskRow.appendChild(editBtn);
+
+          // Botón de eliminar
+          const deleteBtn = document.createElement("span");
+          deleteBtn.textContent = "🗑️";
+          deleteBtn.style.cursor = "pointer";
+          deleteBtn.addEventListener("click", function () {
+            const confirmar = confirm("¿Estás seguro de que deseas eliminar esta tarea?");
+            if (confirmar) {
+              tareas = tareas.filter((t, i) => i !== index);
+              tareasData[nombreCama] = tareas;
+              localStorage.setItem('tareas', JSON.stringify(tareasData));
+              renderTareasPorCama(idNum); // Recargar
+            }
+          });
+          taskRow.appendChild(deleteBtn);
+
+          // Añadir al contenedor
+          contenedorTareas.appendChild(taskRow);
         });
       });
     }
