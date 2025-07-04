@@ -317,13 +317,87 @@
             </div>
           </div>
 
-          <!-- Columna centro: Tareas filtradas por cama -->
-          <div style="flex: 1;">
+          <!-- Columna centro: Tareas filtradas por cama + botón borrar todas las tareas de esta cama -->
+          <div style="flex: 1; display: flex; flex-direction: column;">
             <h3>Tareas para esta cama</h3>
             <div id="filtered-task-container"></div>
+            <!-- Botón borrar todas las tareas de esta cama (solo visible en vista cama) -->
+            <div id="delete-bed-tasks-container" style="width: 100%; margin-top: 12px;"></div>
           </div>
-          <!-- Columna derecha vacía por ahora -->
-          <div style="flex: 1;"></div>
+          <!-- Columna derecha vacía (opcional para layout) -->
+          <div class="right-column" style="flex: 1;"></div>
+  <script>
+    // --- NUEVO: Botón borrar todas las tareas de una cama específica en la vista cama ---
+    function renderDeleteBedTasksButton() {
+      // Determinar si estamos en la vista de cama individual
+      const camaView = document.getElementById('cama-view');
+      const isBedView = camaView && camaView.style.display !== 'none';
+      // El contenedor bajo "Añadir tarea" de la columna central
+      const deleteBedTasksContainer = camaView ? camaView.querySelector('#delete-bed-tasks-container') : null;
+      // Limpiar cualquier botón previo
+      if (deleteBedTasksContainer) deleteBedTasksContainer.innerHTML = '';
+      if (isBedView && deleteBedTasksContainer) {
+        // Crear el botón
+        const deleteBedTasksBtn = document.createElement("button");
+        deleteBedTasksBtn.classList.add("delete-all-button");
+        deleteBedTasksBtn.style.backgroundColor = "#dc3545"; // rojo
+        deleteBedTasksBtn.style.color = "white";
+        deleteBedTasksBtn.style.marginTop = "10px";
+        deleteBedTasksBtn.style.padding = "10px 14px";
+        deleteBedTasksBtn.style.borderRadius = "8px";
+        deleteBedTasksBtn.style.border = "none";
+        deleteBedTasksBtn.style.fontSize = "16px";
+        deleteBedTasksBtn.style.cursor = "pointer";
+        deleteBedTasksBtn.textContent = "🗑️ Borrar TODAS las tareas de esta cama";
+        deleteBedTasksBtn.addEventListener("click", () => {
+          const confirmacion = confirm("¿Estás seguro de que deseas borrar TODAS las tareas de esta cama?");
+          if (!confirmacion) return;
+          // Obtener el número de cama actual (puede estar en currentCama, camaSeleccionadaActual o el atributo data-bed)
+          let camaActual = null;
+          if (typeof camaSeleccionadaActual !== "undefined" && camaSeleccionadaActual) {
+            camaActual = camaSeleccionadaActual;
+          } else if (typeof currentCama !== "undefined" && currentCama) {
+            camaActual = currentCama;
+          } else {
+            // Fallback: intentar leer de panel
+            const camaPanel = document.querySelector('.bed-panel.cama-panel');
+            if (camaPanel) {
+              // nombreCama = camaPanel.getAttribute('data-bed'), pero necesitamos el número
+              const nombreCama = camaPanel.getAttribute('data-bed') || "";
+              const match = nombreCama.match(/\d+/);
+              if (match) camaActual = match[0];
+            }
+          }
+          if (!camaActual) {
+            alert("No se pudo determinar la cama actual.");
+            return;
+          }
+          // Leer nombres personalizados
+          let tareasData = JSON.parse(localStorage.getItem('tareas')) || {};
+          const nombresCamas = tareasData['_nombresCamas'] || {};
+          let nombreCama = nombresCamas[camaActual] || `CAMA ${camaActual}`;
+          // Eliminar las tareas de esa cama
+          if (tareasData[nombreCama]) {
+            delete tareasData[nombreCama];
+          }
+          // Guardar
+          localStorage.setItem('tareas', JSON.stringify(tareasData));
+          // Recargar vistas
+          if (typeof renderTareas === "function") renderTareas();
+          if (typeof renderFilteredTasks === "function") renderFilteredTasks(camaActual);
+        });
+        deleteBedTasksContainer.appendChild(deleteBedTasksBtn);
+      }
+    }
+    // Llamar a la función al cargar y al cambiar de pestaña
+    window.addEventListener('DOMContentLoaded', renderDeleteBedTasksButton);
+    // También al hacer click en tabs (después de cambiar de pestaña)
+    document.addEventListener('click', function(e) {
+      if (e.target.classList && e.target.classList.contains('tab-button')) {
+        setTimeout(renderDeleteBedTasksButton, 10);
+      }
+    });
+  </script>
   <script>
     // Renderiza las tareas filtradas por cama en la vista individual
     function renderFilteredTasks(camaNumber) {
