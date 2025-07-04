@@ -117,20 +117,25 @@
     }
 
     /* Botón eliminar tarea en vista cama individual */
-    .delete-btn-cama {
+    .action-button {
       background: none;
       border: none;
       cursor: pointer;
       font-size: 16px;
-      color: #c62828;
       margin-left: 8px;
-      transition: transform 0.2s;
       padding: 0 2px;
+      transition: transform 0.2s;
     }
-    .delete-btn-cama:hover {
+    .action-button:hover {
       transform: scale(1.2);
-      background: #ffeaea;
+      background: #e3f2fd;
       border-radius: 6px;
+    }
+    .delete-btn-cama, .delete-task {
+      color: #c62828;
+    }
+    .edit-button, .edit-task {
+      color: #1976d2;
     }
 
     /* Mejorado botón submit */
@@ -447,13 +452,30 @@
 
         // Crear el botón eliminar tarea para cama
         const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'delete-btn-cama';
+        deleteBtn.className = 'action-button delete-btn-cama';
         deleteBtn.title = 'Eliminar tarea';
         deleteBtn.innerHTML = '🗑️';
 
-        // Añadir primero el texto, luego los checkboxes, luego el botón eliminar
+        // Crear el botón editar tarea para cama (usando prompt)
+        const editButton = document.createElement('button');
+        editButton.innerHTML = '✏️';
+        editButton.className = 'action-button edit-button';
+        editButton.title = 'Editar tarea';
+        editButton.addEventListener('click', () => {
+            const newText = prompt('Edita la tarea:', tarea.texto);
+            if (newText !== null && newText.trim() !== '') {
+                tarea.texto = newText.trim();
+                tareasData[nombreCama][index].texto = newText.trim();
+                localStorage.setItem('tareas', JSON.stringify(tareasData));
+                renderAccumulatedTasks && renderAccumulatedTasks();
+                renderFilteredTasks(camaNumber);
+            }
+        });
+
+        // Añadir primero el texto, luego los checkboxes, luego los botones
         tareaDiv.appendChild(tareaTexto);
         tareaDiv.appendChild(checkboxContainer);
+        tareaDiv.appendChild(editButton);
         tareaDiv.appendChild(deleteBtn);
 
         // Lógica visual: aplicar fondo y emoji solo si todos los checks están marcados
@@ -1083,17 +1105,19 @@ function assignCheckboxListeners() {
     }
 
     // Renderiza tareas filtradas en cada ventana de cama individual
-    function renderTareasPorCama() {
+    // Modificada para aceptar camaId opcional: si se pasa, renderiza solo esa cama
+    function renderTareasPorCama(camaId = null) {
       const tareasData = JSON.parse(localStorage.getItem("tareas")) || {};
       const camas = document.querySelectorAll(".bed-panel.cama-panel");
-      // Si no hay paneles .cama-panel, intentar .cama-window (legacy)
       if (camas.length === 0) return;
       camas.forEach(camaDiv => {
-        let camaId = camaDiv.getAttribute('data-bed');
-        // camaId puede ser 'CAMA 1', etc. Obtener id numérico
+        let panelCamaId = camaDiv.getAttribute('data-bed');
+        // panelCamaId puede ser 'CAMA 1', etc. Obtener id numérico
         let idNum = null;
-        const m = camaId && camaId.match(/\d+/);
+        const m = panelCamaId && panelCamaId.match(/\d+/);
         if (m) idNum = m[0];
+        // Si camaId está definido, solo renderizar esa cama
+        if (camaId && idNum !== String(camaId)) return;
         // Buscar contenedor de tareas filtradas
         const contenedor = camaDiv.querySelector("#filtered-task-container");
         if (!contenedor) return;
@@ -1103,7 +1127,90 @@ function assignCheckboxListeners() {
         let nombreCama = nombresCamas[idNum] || `CAMA ${idNum}`;
         const tareasCama = tareasData[nombreCama] || [];
         tareasCama.forEach((tarea, index) => {
-          const tareaDiv = crearElementoTarea(tarea, index);
+          // Crear wrapper con la clase task-item para aplicar el estilo flex
+          const tareaDiv = document.createElement('div');
+          tareaDiv.classList.add('task-item', 'filtered-task');
+          // Determinar número de checkboxes
+          const numChecks = tarea.checks?.length || 0;
+          // Crear el span del texto
+          const tareaTexto = document.createElement('span');
+          tareaTexto.textContent = (tarea.texto || tarea.text || '');
+          // Crear el contenedor de checkboxes interactivos
+          const checkboxContainer = document.createElement('div');
+          checkboxContainer.className = 'task-checkboxes';
+          for (let i = 0; i < numChecks; i++) {
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = tarea.checks[i];
+            // Usar atributos data para identificar la tarea y el índice del checkbox
+            checkbox.setAttribute('data-bed', idNum);
+            checkbox.setAttribute('data-index', index);
+            checkbox.setAttribute('data-check-idx', i);
+            // NUEVO: para listeners globales
+            checkbox.classList.add('task-checkbox');
+            checkbox.setAttribute('data-id', index);
+            checkbox.setAttribute('data-type', i);
+            // No disabled: interactivo
+            checkboxContainer.appendChild(checkbox);
+          }
+          // Crear el botón eliminar tarea para cama
+          const deleteBtn = document.createElement('button');
+          deleteBtn.className = 'action-button delete-btn-cama';
+          deleteBtn.title = 'Eliminar tarea';
+          deleteBtn.innerHTML = '🗑️';
+          // Crear el botón editar tarea para cama
+          const editBtn = document.createElement('button');
+          editBtn.className = 'action-button edit-btn';
+          editBtn.title = 'Editar tarea';
+          editBtn.innerHTML = '✏️';
+          // Añadir primero el texto, luego los checkboxes, luego los botones
+          tareaDiv.appendChild(tareaTexto);
+          tareaDiv.appendChild(checkboxContainer);
+          tareaDiv.appendChild(editBtn);
+          tareaDiv.appendChild(deleteBtn);
+          // Lógica visual: aplicar fondo y emoji solo si todos los checks están marcados
+          updateTaskVisualsInBedView(tareaDiv, {
+            text: tarea.texto || tarea.text || '',
+            checks: tarea.checks
+          });
+          // Evento para eliminar tarea en la vista cama (con confirmación)
+          deleteBtn.addEventListener("click", () => {
+            const confirmDelete = confirm("¿Estás seguro de que deseas eliminar esta tarea?");
+            if (confirmDelete) {
+                tareasCama.splice(index, 1);
+                tareasData[nombreCama] = tareasCama;
+                localStorage.setItem("tareas", JSON.stringify(tareasData));
+                renderAccumulatedTasks && renderAccumulatedTasks();
+                renderTareasPorCama(idNum);
+              }
+          });
+          // --- NUEVO: Editar tarea en línea con input, blur y Enter ---
+          editBtn.addEventListener("click", () => {
+            const input = document.createElement("input");
+            input.type = "text";
+            input.value = tarea.texto || tarea.text || '';
+            input.classList.add("edit-input");
+            const originalText = tareaTexto.textContent;
+            tareaTexto.replaceWith(input);
+            input.focus();
+            const saveEdit = () => {
+              const newText = input.value.trim();
+              if (newText && newText !== (tarea.texto || tarea.text)) {
+                // Actualizar la tarea en localStorage
+                tarea.texto = newText;
+                tareasData[nombreCama][index].texto = newText;
+                localStorage.setItem("tareas", JSON.stringify(tareasData));
+                if (typeof renderFilteredTasks === "function") renderFilteredTasks(idNum);
+                if (typeof renderTareas === "function") renderTareas();
+              } else {
+                input.replaceWith(tareaTexto);
+              }
+            };
+            input.addEventListener("blur", saveEdit);
+            input.addEventListener("keypress", (e) => {
+              if (e.key === "Enter") input.blur();
+            });
+          });
           contenedor.appendChild(tareaDiv);
         });
       });
