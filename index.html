@@ -505,7 +505,7 @@
         </div>
       </div>
     </div>
-    <!-- Formulario de añadir tarea -->
+    <!-- Columna de añadir tarea -->
     <aside style="flex: 0.67; background: linear-gradient(to bottom, #c6ffe2, #c6e9ff); padding: 20px; border-radius: 10px; display: flex; flex-direction: column; align-items: center;">
       <h2>Añadir tarea</h2>
       <form style="width: 100%;">
@@ -564,8 +564,10 @@
           <option value="7">Cada 7 días</option>
         </select>
 
-        <button type="submit">Añadir</button>
+        <button id="addTaskButton" type="submit">➕ Añadir</button>
       </form>
+      <!-- Botón global de borrado de tareas (solo visible en vista acumulada, renderizado por JS) -->
+      <div id="delete-all-container" style="width: 100%; margin-top: 12px;"></div>
     </aside>
   </main>
   <section style="background: #eef; padding: 15px 30px; margin: 0 20px 20px 20px; border-radius: 10px; font-size: 15px;">
@@ -1307,3 +1309,52 @@ function assignCheckboxListeners() {
   </footer>
 </body>
 </html>
+
+  <script>
+    // --- NUEVO: Renderizado condicional del botón borrar todas las tareas ---
+    function renderDeleteAllButton() {
+      const deleteAllContainer = document.getElementById('delete-all-container');
+      if (!deleteAllContainer) return;
+      // Solo mostrar si la vista acumulada está visible
+      const acumuladoView = document.getElementById('acumulado-view');
+      if (acumuladoView && acumuladoView.style.display !== 'none') {
+        deleteAllContainer.innerHTML = `
+          <button id="borrar-todas-tareas" class="delete-all-tasks-btn" style="background-color: #e74c3c; color: white; padding: 10px 20px; border: none; border-radius: 4px; margin-top: 10px; cursor: pointer;">
+            🗑️ Borrar TODAS las tareas
+          </button>
+        `;
+        // Asignar el listener al botón
+        const btn = document.getElementById('borrar-todas-tareas');
+        if (btn) {
+          btn.onclick = function () {
+            const confirmacion = confirm("⚠️ ¿Estás seguro de que deseas borrar TODAS las tareas de TODAS las camas?");
+            if (!confirmacion) return;
+            localStorage.setItem("tareas", JSON.stringify([]));
+            if (typeof renderizarPanelAcumulado === "function") {
+              renderizarPanelAcumulado();
+            }
+            if (typeof renderizarVentanasCamas === "function") {
+              renderizarVentanasCamas();
+            }
+            if (typeof renderTareas === "function") {
+              renderTareas();
+            }
+            if (typeof renderFilteredTasks === "function" && typeof camaSeleccionadaActual !== "undefined" && camaSeleccionadaActual) {
+              renderFilteredTasks(camaSeleccionadaActual);
+            }
+            renderDeleteAllButton();
+          };
+        }
+      } else {
+        deleteAllContainer.innerHTML = '';
+      }
+    }
+    // Llamar al renderizador de botón al cargar y al cambiar de pestaña
+    window.addEventListener('DOMContentLoaded', renderDeleteAllButton);
+    // Interceptar clicks en tabs para volver a renderizar el botón
+    document.addEventListener('click', function(e) {
+      if (e.target.classList && e.target.classList.contains('tab-button')) {
+        setTimeout(renderDeleteAllButton, 10);
+      }
+    });
+  </script>
