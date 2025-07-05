@@ -1,0 +1,33 @@
+
+
+.task-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  gap: 8px;
+  padding: 6px 10px;
+  background-color: #f9f9f9;
+  border-radius: 6px;
+}
+
+.task-row span {
+  flex-grow: 1;
+  font-size: 16px;
+}
+
+.task-row input[type="checkbox"] {
+  transform: scale(1.2);
+  margin-right: 4px;
+}
+
+.task-row button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  margin-left: 4px;
+}
+
+.task-row button:hover {
+  opacity: 0.7;
+}

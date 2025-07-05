@@ -6,7 +6,55 @@
   <meta name="author" content="Javier A. Lama Agurto">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Corre Plan - Home</title>
+  <link rel="stylesheet" href="styles.css" />
   <style>
+    /* Panel acumulado: estilos para .task */
+    .task {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fff;
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+      font-size: 16px;
+      gap: 10px;
+    }
+    .task.completed-task {
+      background-color: #e0f7e9;
+    }
+    .task-text {
+      flex: 1 1 0;
+      word-break: break-word;
+      margin-right: 10px;
+    }
+    .checkboxes {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      margin-right: 10px;
+    }
+    .edit-btn, .delete-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      margin-left: 2px;
+      transition: transform 0.2s;
+      padding: 2px 4px;
+      border-radius: 5px;
+    }
+    .edit-btn:hover {
+      background: #e3f2fd;
+      color: #1976d2;
+      transform: scale(1.15);
+    }
+    .delete-btn:hover {
+      background: #ffebee;
+      color: #c62828;
+      transform: scale(1.15);
+    }
     body {
       font-family: Arial, sans-serif;
       margin: 0;
@@ -1027,97 +1075,73 @@ function assignCheckboxListeners() {
           // --- NUEVO: Estructura HTML según requerimiento ---
           const li = document.createElement('li');
           li.style.listStyle = "none";
-          // Crear contenedor principal
-          const taskItemDiv = document.createElement('div');
-          taskItemDiv.className = 'task-item';
-          // Crear span del texto
+          // Estructura: <div class="task"> ... </div>
+          const taskDiv = document.createElement('div');
+          taskDiv.className = 'task';
+          // Texto de la tarea
           const taskText = document.createElement('span');
           taskText.className = 'task-text';
           taskText.textContent = tarea.texto;
-          // Crear contenedor de controles
-          const taskControls = document.createElement('div');
-          taskControls.className = 'task-controls';
-          // Crear los checkboxes (mismo número que antes)
-          const numChecks = Array.isArray(tarea.checks) ? tarea.checks.length : 3;
-          for (let i = 0; i < numChecks; i++) {
-            const check = document.createElement('input');
-            check.type = 'checkbox';
-            check.checked = tarea.checks && tarea.checks[i];
-            taskControls.appendChild(check);
+          // Contenedor de checkboxes
+          const checkboxesDiv = document.createElement('div');
+          checkboxesDiv.className = 'checkboxes';
+          // Siempre 3 checkboxes por requerimiento (aunque tarea.checks.length sea menor)
+          for (let i = 0; i < 3; i++) {
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = tarea.checks && tarea.checks[i];
+            // Listener para actualizar checks
+            checkbox.addEventListener('change', function () {
+              if (!Array.isArray(tarea.checks)) tarea.checks = [];
+              tarea.checks[i] = checkbox.checked;
+              guardarTareas();
+            });
+            checkboxesDiv.appendChild(checkbox);
           }
-          // Crear botón editar
-          const editBtn = document.createElement('span');
-          editBtn.className = 'edit-task-button';
+          // Botón editar
+          const editBtn = document.createElement('button');
+          editBtn.className = 'edit-btn';
           editBtn.title = 'Editar tarea';
           editBtn.textContent = '✏️';
-          taskControls.appendChild(editBtn);
-          // Crear botón eliminar
-          const deleteBtn = document.createElement('span');
-          deleteBtn.className = 'delete-task-button';
+          editBtn.addEventListener('click', function () {
+            const originalText = tarea.texto || '';
+            const nuevoTexto = prompt("Edita la tarea:", originalText.replace(' ✅', ''));
+            if (nuevoTexto !== null && nuevoTexto.trim() !== '') {
+              tarea.texto = nuevoTexto.trim();
+              guardarTareas();
+            }
+          });
+          // Botón eliminar
+          const deleteBtn = document.createElement('button');
+          deleteBtn.className = 'delete-btn';
           deleteBtn.title = 'Eliminar tarea';
           deleteBtn.textContent = '🗑️';
-          taskControls.appendChild(deleteBtn);
-          // Añadir texto y controles al task-item
-          taskItemDiv.appendChild(taskText);
-          taskItemDiv.appendChild(taskControls);
-          // Si está completada, aplicar clase/fondo
-          const allChecked = tarea.checks && tarea.checks.every(c => c === true);
-          if (allChecked) {
-            taskItemDiv.classList.add('completed-task');
-            if (!taskText.innerHTML.includes('✅')) {
-              taskText.innerHTML += ' ✅';
-            }
-          } else {
-            taskItemDiv.classList.remove('completed-task');
-            taskText.innerHTML = taskText.innerHTML.replace(' ✅', '');
-          }
-          li.appendChild(taskItemDiv);
-          ul.appendChild(li);
-          // Listeners: eliminar
           deleteBtn.addEventListener('click', function () {
             if (confirm('¿Deseas eliminar esta tarea?')) {
-              li.remove();
-              guardarTareas();
+              // Eliminar la tarea del array
+              tareasData[cama].splice(idx, 1);
+              localStorage.setItem('tareas', JSON.stringify(tareasData));
+              renderTareas();
             }
           });
-          // Listeners: checkboxes
-          taskControls.querySelectorAll('input[type="checkbox"]').forEach((cb, idx2) => {
-            cb.addEventListener('change', function() {
-              tarea.checks[idx2] = cb.checked;
-              guardarTareas();
-            });
-          });
-          // Listener: editar
-          editBtn.addEventListener('click', function () {
-            const originalText = taskText.textContent.replace(' ✅', '').trim();
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.value = originalText;
-            input.style.width = '100%';
-            taskText.replaceWith(input);
-            input.focus();
-            const saveEdit = () => {
-              const newSpan = document.createElement('span');
-              newSpan.className = 'task-text';
-              newSpan.textContent = input.value.trim();
-              if ([...taskControls.querySelectorAll('input[type="checkbox"]')].every(c => c.checked)) {
-                taskItemDiv.classList.add('completed-task');
-                newSpan.innerHTML += ' ✅';
-              } else {
-                taskItemDiv.classList.remove('completed-task');
-              }
-              input.replaceWith(newSpan);
-              // Actualizar el texto de la tarea
-              tarea.texto = input.value.trim();
-              guardarTareas();
-            };
-            input.addEventListener('blur', saveEdit);
-            input.addEventListener('keypress', (e) => {
-              if (e.key === 'Enter') {
-                saveEdit();
-              }
-            });
-          });
+          // Añadir elementos al div principal
+          taskDiv.appendChild(taskText);
+          taskDiv.appendChild(checkboxesDiv);
+          taskDiv.appendChild(editBtn);
+          taskDiv.appendChild(deleteBtn);
+          // Si está completada, aplicar clase/fondo
+          const allChecked = tarea.checks && tarea.checks.length === 3 && tarea.checks.every(c => c === true);
+          if (allChecked) {
+            taskDiv.classList.add('completed-task');
+            if (!taskText.textContent.includes('✅')) {
+              taskText.textContent += ' ✅';
+            }
+          } else {
+            taskDiv.classList.remove('completed-task');
+            taskText.textContent = (tarea.texto || '').replace(' ✅', '');
+          }
+          li.appendChild(taskDiv);
+          ul.appendChild(li);
         });
       }
       // Renderizar tareas por cama en ventanas de cama
